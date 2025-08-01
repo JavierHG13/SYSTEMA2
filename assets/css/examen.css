@@ -1,0 +1,130 @@
+ body 
+  {
+   background: #f9f9f9;
+  }
+
+  #main {
+   min-height: 650px;
+   margin: 0px;
+   padding: 0px;
+   display: -webkit-flex;
+   display:         flex;
+   -webkit-flex-flow: row;
+           flex-flow: row;
+   }
+ 
+  #main > article {
+   margin: 4px;
+   padding: 5px;
+   border: 1px solid #428bca;
+   border-radius: 5pt;
+   background: #f9f9f9;
+   -webkit-flex: 3 1 60%;
+           flex: 3 1 60%;
+   -webkit-order: 2;
+           order: 2;
+   }
+  
+  
+  #main > aside {
+   margin: 4px;
+   padding: 5px;
+   border: 1px solid #428bca;
+   border-radius: 5pt;
+   background: #f9f9f9;
+   -webkit-flex: 1 6 40%;
+           flex: 1 6 40%;
+   -webkit-order: 3;
+           order: 3;
+   }
+ 
+  header, nav, footer {
+   display: block;
+   margin: 4px;
+   padding: 5px;
+   min-height: 30px;
+   border: 1px solid #428bca;
+   border-radius: 5pt;
+   background: #428bca;
+   text-align: justify-all;
+   }
+
+   
+ 	header{
+ 		
+ 		border: 1px solid #2f2f2f;
+ 		color:#FFF;
+ 		 font-weight: bold;
+   		border-radius: 5pt;
+   		background: #5cb85c;
+ 	}
+ 
+  /* Too narrow to support three columns */
+   @media (max-width: 1367px) {
+		#main {
+   			min-height: 580px;
+		}
+   }
+   @media (max-width: 1152px) {
+    #main {
+        min-height: 480px;
+    }
+   }
+  @media all and (max-width: 640px) {
+    #main, #page {
+    -webkit-flex-flow: column;
+            flex-flow: column;
+   }
+
+   #main > article,  #main > aside {
+    /* Return them to document order */
+    -webkit-order: 0;
+            order: 0;
+   }
+  
+    #main > aside, header, footer, nav,article {
+    min-height: 50px;
+    /*max-height: 50px;*/
+   }
+   nav{
+   	display: none;
+   }
+  }
+
+.label-info{
+	background: #fff;
+	color:#428bca;
+}
+.label-default{
+	background: #428bca;
+	color:#b3d0e9;
+}
+
+
+/* tab color */
+.nav-tabs>li#link-planteamiento>a {
+  background-color: #337AB7; 
+  border-color: #337A00;
+  color:#fff;
+}
+
+.nav-tabs>li#link-planteamiento.disabled>a {
+  background-color: #fff; 
+  border-color: #fff;
+  color:#fff;
+}
+
+
+#img-base,#img-plantea
+{
+    -moz-transition: -moz-transform 1s ease-in-out 0.1s;
+    -webkit-transition: -webkit-transform 1s ease-in-out 0.1s;
+}
+#img-base:hover,#img-plantea:hover
+{
+-moz-transform: scale(1.5);
+-webkit-transform:scale(1.5);
+}
+.hover_img a { position:relative; }
+.hover_img a span { position:absolute; display:none; z-index:99; }
+.hover_img a:hover span { display:block; }

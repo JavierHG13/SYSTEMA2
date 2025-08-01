@@ -1,0 +1,173 @@
+/* Variables de color institucional */
+:root {
+    --sys-primary: #278104;
+    --sys-primary-hover: #1f6603;
+    --sys-neutral: #f8f9fa;
+    --sys-neutral-border: #e9ecef;
+    --sys-success: #d4edda;
+    --sys-progress: #d1ecf1;
+}
+
+/* Estilos base para esquemas */
+.sys-esquema-container { font-family: system-ui, -apple-system, Arial, sans-serif; }
+.sys-rounded { border-radius: 8px; }
+.sys-text-muted { color: #6c757d; }
+
+/* Botones para esquemas */
+.sys-esquema-btn { background: var(--sys-primary); border-color: var(--sys-primary); color: white; transition: background 0.3s; }
+.sys-esquema-btn:hover { background: var(--sys-primary-hover); border-color: var(--sys-primary-hover); }
+.sys-btn-danger { background: #d9534f; border-color: #d9534f; color: white; }
+.sys-btn-danger:hover { background: #c9302c; border-color: #c9302c; }
+.sys-btn-default { background: var(--sys-neutral); border-color: var(--sys-neutral-border); color: #6c757d; }
+
+/* Paneles para esquemas */
+.sys-esquema-panel { border-color: var(--sys-primary); }
+.sys-esquema-panel .panel-heading { background: white; border-bottom: 2px solid var(--sys-primary); color: var(--sys-primary); border-radius: 7px 7px 0 0; }
+.sys-esquema-panel-success .panel-heading { background: var(--sys-primary); color: white; }
+
+/* Modales para esquemas */
+.sys-esquema-modal-header { background: var(--sys-primary); color: white; }
+.sys-esquema-modal-header .close { color: white; opacity: 0.8; }
+.sys-esquema-modal-header .close:hover { opacity: 1; }
+
+/* Inputs para esquemas */
+.sys-esquema-form-control:focus { border-color: var(--sys-primary); box-shadow: 0 0 0 0.2rem rgba(39, 129, 4, 0.25); }
+
+/* Badges para esquemas */
+.sys-esquema-badge { background: var(--sys-neutral); color: var(--sys-primary); border: 1px solid var(--sys-neutral-border); }
+.sys-esquema-badge-complete { background: var(--sys-primary); color: white; }
+.sys-esquema-badge-progress { background: var(--sys-progress); color: #0c5460; }
+
+.sys-esquema-table {
+    width: 100%;
+    table-layout: auto; /* Cambiar de "fixed" a "auto" para evitar sobreposición */
+    border-collapse: collapse;
+}
+
+.sys-esquema-table th, .sys-esquema-table td {
+    text-align: center;
+    word-wrap: break-word;
+    padding: 15px 12px; /* Aumentar de "12px" a "15px 12px" */
+    vertical-align: middle;
+    font-size: 15px; /* Agregar tamaño de fuente específico */
+}
+
+.sys-esquema-table th {
+    text-align: left;
+}
+
+.sys-esquema-table td:nth-child(1) {
+    text-align: left; /* Primera columna alineada a la izquierda */
+}
+
+/* Breadcrumbs para esquemas */
+.sys-esquema-breadcrumb { background: white; border: 1px solid var(--sys-neutral-border); }
+.sys-esquema-breadcrumb a { color: var(--sys-primary); }
+
+/* Progreso y acordeones para esquemas */
+.sys-esquema-progress { height: 20px; margin-bottom: 10px; }
+.sys-esquema-progress-bar { transition: width 0.3s ease; }
+.sys-esquema-progress-bar-info { background: var(--sys-progress); color: #0c5460; }
+.sys-esquema-progress-bar-success { background: var(--sys-primary); color: white; }
+.sys-esquema-accordion-toggle { color: #495057; text-decoration: none; display: block; }
+.sys-esquema-accordion-icon { transition: transform 0.3s ease; }
+.sys-esquema-close { font-size: 16px; color: var(--sys-primary); cursor: pointer; }
+
+/* Estilos para Vista 2 (Mis Materias) - mantener compatibilidad */
+.sys-panel-success { border-color: var(--sys-primary); }
+.sys-panel-success .panel-heading { background: var(--sys-primary); color: white; border-radius: 7px 7px 0 0; }
+.sys-btn-outline-primary { color: var(--sys-primary); border-color: var(--sys-primary); background: transparent; }
+.sys-btn-outline-primary:hover { background: var(--sys-primary); color: white; }
+.sys-badge { background: var(--sys-neutral); color: var(--sys-primary); border: 1px solid var(--sys-neutral-border); }
+.sys-bg-success { background: var(--sys-primary); color: white; }
+.sys-glyphicon-spin { color: var(--sys-primary); }
+
+
+/* Hacer botones de eliminar más grandes solo en las tablas de esquemas */
+.sys-esquema-table .btn-xs {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.sys-esquema-table .btn-xs .glyphicon {
+    font-size: 13px;
+}
+
+@media (min-width: 768px) {
+    .sys-esquema-container {
+        padding: 20px;
+    }
+}
+
+/* Responsividad para pantallas pequeñas */
+@media (max-width: 767px) {
+    .sys-esquema-table {
+        font-size: 14px;
+        table-layout: auto; /* Importante: auto en móviles */
+    }
+    
+    .sys-esquema-table th, .sys-esquema-table td {
+        padding: 12px 8px; /* Más espacio que antes */
+        white-space: nowrap; /* Evitar que el texto se divida en líneas */
+    }
+    
+    .sys-esquema-table th {
+        width: auto; /* Cambiar de porcentaje fijo a auto */
+        min-width: 120px; /* Ancho mínimo para evitar sobreposición */
+    }
+    
+    .sys-esquema-table td {
+        width: auto; /* Cambiar de porcentaje fijo a auto */
+        min-width: 80px; /* Ancho mínimo */
+    }
+    
+    /* Hacer badges más pequeños pero legibles en móviles */
+    .sys-esquema-badge {
+        font-size: 12px; /* Aumentar de 11px a 12px */
+        margin: 2px;
+        padding: 4px 6px; /* Agregar padding específico */
+    }
+    
+    /* Botones más pequeños pero no tanto */
+    .btn-xs {
+        padding: 6px 10px; /* Aumentar de "4px 8px" */
+        font-size: 12px; /* Aumentar de 11px */
+    }
+}
+
+/* Mejoras para el acordeón en dispositivos móviles */
+@media (max-width: 767px) {
+    .sys-esquema-panel .panel-heading {
+        padding: 15px;
+    }
+    
+    .sys-esquema-panel .panel-body {
+        padding: 15px;
+    }
+}
+
+/* Mejoras para el acordeón de equipos en móviles */
+@media (max-width: 767px) {
+    .sys-esquema-panel .panel-heading {
+        padding: 12px 15px; /* Reducir padding en móviles */
+    }
+    
+    .sys-esquema-panel .panel-heading h4 {
+        font-size: 15px; /* Texto más pequeño en móviles */
+    }
+    
+    .sys-esquema-panel .badge {
+        font-size: 11px; /* Badges más pequeños */
+        padding: 3px 6px;
+        margin-left: 5px !important;
+    }
+    
+    .sys-esquema-panel .pull-right {
+        margin-left: 8px !important; /* Menos espacio entre elementos */
+    }
+    
+    .sys-esquema-panel .btn {
+        padding: 5px 8px; /* Botones más pequeños */
+        font-size: 12px;
+    }
+}

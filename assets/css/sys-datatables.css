@@ -1,0 +1,231 @@
+/* 
+ * sys-custom-table.css - Versión ultra-reducida
+ * Solo estilos específicos para tabla personalizada
+ * Aprovecha sys-styles.css para el resto
+ */
+
+/* Búsqueda */
+.sys-search-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 300px;
+}
+
+.sys-search-wrapper .glyphicon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #333;
+    opacity: 0.6;
+    z-index: 2;
+}
+
+.sys-search-wrapper input {
+    width: 100%;
+    padding: 10px 12px 10px 35px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.sys-search-wrapper input:focus {
+    border-color: #278104;
+    box-shadow: 0 0 0 0.2rem rgba(39, 129, 4, 0.25);
+    outline: none;
+}
+
+/* Contenedor tabla */
+.sys-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+}
+
+/* Tabla */
+.sys-custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    margin: 0;
+}
+
+.sys-custom-table thead th {
+    background: #278104;
+    color: white;
+    font-weight: 600;
+    padding: 16px 14px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.sys-custom-table thead th:hover {
+    background: #1f6603;
+}
+
+.sys-custom-table thead th.sortable::after {
+    content: "↕";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.sys-custom-table thead th.sort-asc::after {
+    content: "↑";
+    opacity: 1;
+}
+
+.sys-custom-table thead th.sort-desc::after {
+    content: "↓";
+    opacity: 1;
+}
+
+.sys-custom-table tbody td {
+    padding: 14px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.sys-custom-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.sys-custom-table tbody tr:hover {
+    background-color: rgba(39, 129, 4, 0.06);
+    transition: background-color 0.2s ease;
+}
+
+/* Paginación */
+.sys-pagination {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.pagination-button {
+    padding: 8px 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 40px;
+}
+
+.pagination-button:hover:not(:disabled) {
+    background: #1f6603;
+    color: white;
+    border-color: #1f6603;
+}
+
+.pagination-button.active {
+    background: #278104;
+    color: white;
+    border-color: #278104;
+}
+
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8f9fa;
+}
+
+.pagination-button.inicio,
+.pagination-button.fin {
+    font-weight: 600;
+    background: linear-gradient(135deg, #278104, #1f6603);
+    color: white;
+    border-color: #278104;
+}
+
+.pagination-button.inicio:disabled,
+.pagination-button.fin:disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.pagination-button.anterior,
+.pagination-button.siguiente {
+    font-weight: 600;
+    color: #278104;
+    border-color: #278104;
+}
+
+.sys-pagination-info {
+    text-align: center;
+    color: #333;
+    font-size: 14px;
+    margin: 10px 0;
+    font-weight: 500;
+}
+
+.sys-no-records {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 16px;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+
+    .sys-custom-table thead th,
+    .sys-custom-table tbody td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    .sys-search-wrapper {
+        max-width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .pagination-button {
+        padding: 6px 8px;
+        font-size: 12px;
+        min-width: 35px;
+    }
+}
+
+@media (max-width: 576px) {
+
+    .sys-custom-table thead th,
+    .sys-custom-table tbody td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    .pagination-button {
+        padding: 5px 6px;
+        font-size: 11px;
+        min-width: 30px;
+    }
+
+    .pagination-button.inicio,
+    .pagination-button.fin {
+        display: none;
+    }
+}

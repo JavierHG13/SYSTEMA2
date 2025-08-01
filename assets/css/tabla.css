@@ -1,0 +1,106 @@
+  .pagination-button {
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    margin: 2px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.8s ease;
+  }
+
+  /* Botón activo */
+.pagination-button.active {
+    background-color: #287bbe; /* azul fuerte fijo */
+    color: white;
+    cursor: default; /* Opcional: cambia cursor para indicar que está activo */
+    pointer-events: none; /* Opcional: desactiva clicks */
+}
+
+.pagination-button.active:hover {
+    background-color: #287bbe; /* evita que cambie al hacer hover */
+}
+
+
+  /* Botones Inicio y Fin (rojo) */
+  .pagination-button.inicio,
+  .pagination-button.fin {
+    background-color: #d9534f; /* rojo bootstrap */
+  }
+
+  .pagination-button.inicio:hover,
+  .pagination-button.fin:hover {
+    background-color: #c9302c;
+  }
+
+  /* Botones Anterior y Siguiente (azul fuerte) */
+  .pagination-button.anterior,
+  .pagination-button.siguiente {
+    background-color: #287bbe;
+  }
+
+  .pagination-button.anterior:hover,
+  .pagination-button.siguiente:hover {
+    background-color: #195e8a;
+  }
+
+  /* Botones de páginas normales (azul bajito) */
+  .pagination-button.pagina {
+    background-color: #92b7d6; /* azul bajito */
+  }
+
+  .pagination-button.pagina:hover:not(.active) {
+    background-color: #395c7b;
+  }
+
+  /* Botones deshabilitados */
+  .pagination-button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px; /* más espacio en pantallas grandes */
+  margin: 0 auto 15px;
+}
+
+.search-wrapper .glyphicon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #4a729f;
+  font-size: 13px;
+  pointer-events: none; /* para no interferir con el input */
+}
+
+#buscador {
+  width: 100%;
+  padding: 5px 15px 5px 30px;
+  border: 2px solid #a8a8a8;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  transition: 0.3s ease all;
+  box-sizing: border-box;
+}
+
+#buscador:focus {
+  border-color: #7897ce;
+  box-shadow: 0 0 8px rgba(77, 162, 246, 0.5);
+}
+
+/* Opcional: margen inferior en pantallas pequeñas */
+@media (max-width: 768px) {
+  .search-wrapper {
+    max-width: 100%;
+    margin-bottom: 20px;
+  }
+}

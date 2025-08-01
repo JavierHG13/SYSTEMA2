@@ -1,0 +1,164 @@
+:root {
+        --primary-color: #3c903eff;
+        --secondary-color: #F0FAF2;
+        --hover-color: #3e8e41;
+        --border-color: #e0e0e0;
+        --text-color: #333;
+    }
+
+    .modal-lg-custom {
+        width: 90%; 
+        max-width: 950px;
+    }
+
+    .btns {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        gap: 8px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        margin-top: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    .cd {
+        margin-bottom: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        padding: 14px 16px;
+        text-align: left;
+    }
+
+    td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    tr:nth-child(even) {
+        background-color: var(--secondary-color);
+    }
+
+    tr:hover {
+        background-color: rgba(76, 175, 80, 0.08);
+    }
+
+
+    .btn-group-xs .btn {
+        padding:  6px;
+    }
+    
+    .no-records {
+        text-align: center;
+        padding: 20px;
+        font-size:15px;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 15px;
+        }
+        
+        th, td {
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+        
+    }
+    
+    @media (max-width: 576px) {
+        .btn-group {
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .btn-group-xs .btn {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+     .form-control {
+        border: 1px solid gray;
+        border-radius: 4px;
+        max-width:90px;
+    }
+    
+    .form-control:focus {
+        box-shadow: 0 0 0 0.3rem rgba(69, 151, 213, 0.25);
+    }
+     #tbl_materias_filter input {
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    padding: 4px 8px;
+    }
+
+    #tbl_materias_length select {
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        padding: 4px 8px;
+    }
+    /* Estilo para la paginación */
+    .dataTables_paginate {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .dataTables_paginate a {
+        display: inline-block;
+        padding: 6px 10px;
+        margin: 2px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: white;
+        color: var(--text-color);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 13px;
+    }
+
+    .dataTables_paginate a:hover {
+        background-color: var(--hover-color);
+        color: white;
+    }
+
+    .dataTables_paginate .current {
+        background-color: var(--primary-color);
+        color: white !important;
+        border-color: var(--primary-color);
+    }
+
+    .dataTables_info {
+        font-size: 13px;
+        color: var(--text-color);
+    }
+    .card {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color:white;
+        border-radius: 6px;
+    }
