@@ -1,6 +1,7 @@
 <!-- cargar estilos de sys-datatables.css -->
 <link rel="stylesheet" href="<?= base_url() ?>assets/css/sys-datatables.css">
 
+
 <div class="sys-esquema-container">
     <!-- Header simple -->
     <div class="text-center" style="margin-bottom: 30px;">
@@ -60,7 +61,7 @@
         <table class="sys-custom-table" id="tablaInstrumentos">
             <thead>
                 <tr>
-            
+
                     <th data-sort="nombre">Nombre del Instrumento</th>
                     <th data-sort="vchNomMateria">Materia</th>
                     <th data-sort="nombre_tipo" class="text-center">Tipo</th>
@@ -72,7 +73,7 @@
                 <?php if ($instrumentos) : ?>
                     <?php foreach ($instrumentos->result() as $materia) : ?>
                         <tr>
-                         
+
                             <td><?= $materia->nombre; ?></td>
                             <td><?= $materia->vchNomMateria; ?></td>
                             <td class="text-center">
@@ -207,9 +208,10 @@
         let sortDirection = {};
         let rows = Array.from(tbody.querySelectorAll('tr'));
 
-        [filterMateria, filterParcial, searchInput].forEach(element => {
-            element.addEventListener('input', applyFilters);
-        });
+        filterMateria.addEventListener('change', applyFilters);
+        filterParcial.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+
 
         document.querySelectorAll('.sys-custom-table th[data-sort]').forEach(th => {
             th.addEventListener('click', () => {
@@ -240,8 +242,8 @@
 
             rows.forEach(row => {
                 if (row.cells.length > 1) {
-                    const materiaText = row.cells[2].textContent.toLowerCase();
-                    const parcialText = row.cells[4].textContent.toLowerCase();
+                    const materiaText = row.cells[1].textContent.toLowerCase(); // Columna Materia = index 1
+                    const parcialText = row.cells[3].textContent.toLowerCase(); // Columna Parcial = index 3
                     const rowText = Array.from(row.cells).map(cell => cell.textContent.toLowerCase()).join(' ');
                     const matches = (!materia || materiaText.includes(materia)) &&
                         (!parcial || parcialText.includes(parcial)) &&
@@ -253,5 +255,6 @@
             document.getElementById('totalInstrumentos').textContent =
                 rows.filter(row => row.style.display !== 'none' && row.cells.length > 1).length;
         }
+
     });
 </script>

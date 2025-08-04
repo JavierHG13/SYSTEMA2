@@ -136,8 +136,8 @@ class Guardar_edicion_programacion extends CI_Controller
 
         $data = array(
             'id_examen'      => $id_examen,
-            'fch_inicia'     => date('Y-d-m H:i:s', strtotime($fecha1)),	
-            'fch_termina'    => date('Y-d-m H:i:s', strtotime($fecha2)),
+            'fch_inicia'     => date('Y-m-d H:i:s', strtotime($fecha1)),	
+            'fch_termina'    => date('Y-m-d H:i:s', strtotime($fecha2)),
             'tm_hora_inicio' => date("H:i:s", strtotime($this->input->post('inicio'))),
             'tm_hora_final'  => date("H:i:s", strtotime($this->input->post('termino'))),
             'tm_duracion'    => $duracion_time,

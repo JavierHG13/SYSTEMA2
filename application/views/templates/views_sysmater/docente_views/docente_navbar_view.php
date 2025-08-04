@@ -187,7 +187,7 @@
 									</li>
 									<li>
 										<a href="<?= site_url('/sysmater/docente/docente/programar_actividad') ?>">
-											Asignar actividades
+											Nueva Actividad
 										</a>
 									</li>
 									<li>

@@ -38,6 +38,7 @@ class actividades_model extends CI_Model
 
         // Obtener modalidad (1 = individual, 2 = equipo)
         $modalidad = $actividad_data['id_modalidad'];
+        $id_grupo_asignado = isset($grupos[0]) ? $grupos[0] : null;
 
 
         // 2. Insertar relación con grupos
@@ -78,39 +79,35 @@ class actividades_model extends CI_Model
             }
         }
 
-        // 3. Si la actividad es en EQUIPO, relacionamos los equipos e insertamos sus integrantes
+        // Si es modalidad en equipo
         if ($modalidad == 2 && !empty($equipos)) {
-            foreach ($equipos as $id_equipo) {
-                // Insertar equipo
+            foreach ($equipos as $equipo) {
+                // Crear equipo
+                $this->db->insert('tbl_equipos', [
+                    'id_grupo' => $id_grupo_asignado,
+                    'nombre_equipo' => $equipo->nombre
+                ]);
+                $id_equipo = $this->db->insert_id();
+
+                // Relacionar equipo con actividad
                 $this->db->insert('tbl_actividad_equipo', [
                     'id_actividad' => $id_actividad,
                     'id_equipo' => $id_equipo,
                     'id_estado' => 1
                 ]);
 
+                // Asignar integrantes
+                foreach ($equipo->integrantes as $integrante) {
+                    $this->db->insert('tbl_equipo_alumno', [
+                        'id_equipo' => $id_equipo,
+                        'vchMatricula' => $integrante->vchMatricula
+                    ]);
 
-                $integrantes = $this->db
-                    ->select('vchMatricula')
-                    ->where('id_equipo', $id_equipo)
-                    ->get('tbl_equipo_alumno')
-                    ->result();
-
-                //Insertar cada integrante del equipo en tbl_actividad_alumno (si no existe ya)
-                foreach ($integrantes as $integrante) {
-                    // Evitar duplicados si el alumno ya fue insertado
-                    $existe = $this->db
-                        ->where('id_actividad', $id_actividad)
-                        ->where('vchMatricula', $integrante->vchMatricula)
-                        ->get('tbl_actividad_alumno')
-                        ->row();
-
-                    if (!$existe) {
-                        $this->db->insert('tbl_actividad_alumno', [
-                            'id_actividad' => $id_actividad,
-                            'vchMatricula' => $integrante->vchMatricula,
-                            'id_estado'  => 1
-                        ]);
-                    }
+                    $this->db->insert('tbl_actividad_alumno', [
+                        'id_actividad' => $id_actividad,
+                        'vchMatricula' => $integrante->vchMatricula,
+                        'id_estado'  => 1
+                    ]);
                 }
             }
         }
@@ -264,36 +261,93 @@ class actividades_model extends CI_Model
     }
 
 
-    public function listar_instrumentos($vchClvMateria, $parcial, $periodo)
+    public function listar_instrumentos($vchClvMateria, $parcial)
     {
-        $sql = "SELECT * FROM tbl_instrumento WHERE vchClvMateria = ? AND parcial = ? AND vchPeriodo = ?";
+        $sql = "SELECT * FROM tbl_instrumento WHERE vchClvMateria = ? AND parcial = ?";
 
-        $query = $this->db->query($sql, array($vchClvMateria, $parcial, $periodo));
+        $query = $this->db->query($sql, array($vchClvMateria, $parcial));
 
         return $query->num_rows() > 0 ? $query->result() : []; //Resultado listo para JSON
     }
 
 
-    public function obtener_equipos_por_grupo($idGrupo)
-    {
-        $sql = "
-            SELECT 
-                e.id_equipo,
-                e.nombre_equipo,
-                COUNT(ea.vchMatricula) AS total_integrantes,
-                STRING_AGG(CONCAT(a.vchNombre, ' ', a.vchAPaterno), ', ') AS integrantes_nombres,
-                STRING_AGG(ea.vchMatricula, ', ') AS matriculas
-            FROM tbl_equipos e
-            LEFT JOIN tbl_equipo_alumno ea ON e.id_equipo = ea.id_equipo
-            LEFT JOIN tblAlumnos a ON ea.vchMatricula = a.vchMatricula
-            WHERE e.id_grupo = ?
-            GROUP BY e.id_equipo, e.nombre_equipo
-            ORDER BY e.nombre_equipo
-        ";
 
-        $query = $this->db->query($sql, array($idGrupo));
-        return $query->result();
+    public function obtener_alumnos_grupo($idGrupo, $materia, $vchClvTrabajador)
+    {
+        $query = $this->db->query(
+            "
+        EXEC sp_obtenerAlumnosPorGrupo 
+            @claveDocente = ?, 
+            @claveMateria = ?, 
+            @idGrupo = ?",
+            [$vchClvTrabajador, $materia, $idGrupo]
+        );
+
+        return $query->result_array();
     }
+
+
+
+    public function obtener_equipos_por_grupo($idGrupo, $materia, $vchClvTrabajador)
+    {
+        // Obtener actividades anteriores
+        $query = $this->db->query(
+            "
+        EXEC sp_obtenerActividadesConEquiposPorGrupo 
+            @claveDocente = ?, 
+            @claveMateria = ?, 
+            @idGrupo = ?",
+            [$vchClvTrabajador, $materia, $idGrupo]
+        );
+
+        $actividades = $query->result_array();
+
+        if (empty($actividades)) {
+            return [];
+        }
+
+        $maxActividad = max(array_column($actividades, 'id_actividad'));
+
+   
+        $queryEquipos = $this->db->query(
+            "
+        EXEC sp_equiposAnteriores 
+            @idActividadAnterior = ?, 
+            @idGrupo = ?",
+            [$maxActividad, $idGrupo]
+        );
+
+        $equiposIds = array_column($queryEquipos->result_array(), 'id_equipo');
+        if (empty($equiposIds)) {
+            return [];
+        }
+
+        $this->db->where_in('id_equipo', $equiposIds);
+        $equipos = $this->db->get('tbl_equipos')->result_array();
+
+        foreach ($equipos as &$equipo) {
+            $idEquipo = $equipo['id_equipo'];
+
+            $integrantesQuery = $this->db->query(
+                "SELECT 
+                tbl_equipo_alumno.vchMatricula, 
+                vchNombre, 
+                vchAPaterno, 
+                vchAMaterno 
+            FROM tbl_equipo_alumno
+            INNER JOIN tblAlumnos 
+                ON tbl_equipo_alumno.vchMatricula = tblAlumnos.vchMatricula
+            WHERE id_equipo = ?",
+                [$idEquipo]
+            );
+
+            $equipo['integrantes'] = $integrantesQuery->result_array();
+        }
+
+        return $equipos;
+    }
+
+
 
     public function obtener_integrantes_actividad($id_grupo, $id_actividad)
     {
@@ -793,7 +847,7 @@ class actividades_model extends CI_Model
                 $this->db->where('id_actividad_alumno', $id_actividad_alumno)
                     ->update('tbl_actividad_alumno', [
                         'observacion' => $observacion,
-                        'id_estado'   => 2 
+                        'id_estado'   => 2
                     ]);
             }
 
@@ -832,45 +886,6 @@ class actividades_model extends CI_Model
 
 
 
-    /*public function guardarEvaluacionEquipo($id_actividad_equipo, $observacion, $calificaciones)
-    {
-        $this->db->trans_start();
-
-        // 1. Actualiza observación y estado
-        $this->db->where('id_actividad_equipo', $id_actividad_equipo);
-        $this->db->update('tbl_actividad_equipo', [
-            'observacion' => $observacion,
-            'id_estado' => 2 // Evaluado
-        ]);
-
-        // 2. Obtener el ID del equipo relacionado
-        $id_equipo = $this->obtener_equipo_por_actividad($id_actividad_equipo);
-
-        // 3. Inserta las calificaciones si no existen
-        foreach ($calificaciones as $item) {
-            // Verifica si ya existe la calificación
-            $this->db->where([
-                'id_equipo' => $id_equipo,
-                'id_actividad_equipo' => $id_actividad_equipo,
-                'id_criterio' => $item['id_criterio']
-            ]);
-            $existe = $this->db->get('tbl_evaluacion_criterioActividadEquipo')->num_rows();
-
-            if ($existe == 0) {
-                $this->db->insert('tbl_evaluacion_criterioActividadEquipo', [
-                    'id_equipo' => $id_equipo,
-                    'id_actividad_equipo' => $id_actividad_equipo,
-                    'id_criterio' => $item['id_criterio'],
-                    'calificacion' => $item['calificacion']
-                ]);
-            } else {
-                log_message('debug', 'Ya existe evaluación para criterio: ' . $item['id_criterio'] . ' en actividad equipo: ' . $id_actividad_equipo);
-            }
-        }
-
-        $this->db->trans_complete();
-        return $this->db->trans_status();
-    }*/
 
 
 
@@ -888,13 +903,12 @@ class actividades_model extends CI_Model
         return null;
     }
 
-    public function obtenerEquipoPorActividadEquipo($id_actividad_equipo, $periodo)
+    public function obtenerEquipoPorActividadEquipo($id_actividad_equipo)
     {
         $this->db->select('tbl_equipos.id_equipo, tbl_equipos.nombre_equipo');
         $this->db->from('tbl_equipos');
         $this->db->join('tbl_actividad_equipo', 'tbl_equipos.id_equipo = tbl_actividad_equipo.id_equipo');
         $this->db->where('tbl_actividad_equipo.id_actividad_equipo', $id_actividad_equipo);
-        $this->db->where('tbl_equipos.Periodo', $periodo);
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {

@@ -22,17 +22,16 @@ class Login extends CI_Controller
 		$type = $this->input->post('type_of_user');
 		$username = $this->input->post("username");
 		$password = $this->input->post("password");
- 
+
 		$this->validation();
 
 		if ($this->form_validation->run() == FALSE) {
 			$data['systemas'] = $this->login_model->Systemas_activos();
 			$this->load->view('templates/login_view');
-			
 		} else {
 			// validation succeeds
 			if ($this->input->post('btn_login') == "Ingresar") {
-				
+
 
 				if ($type == 'Alumno(a)') {
 					$this->login_alumno($username, $password, $system);
@@ -47,7 +46,6 @@ class Login extends CI_Controller
 				} else {
 					$this->logout();
 				}
-
 			} else {
 				redirect(base_url());
 			} // end if-else
@@ -148,10 +146,10 @@ class Login extends CI_Controller
 	{
 		echo 'ad5';
 		// check if username and password are correct
-		$alumno_result = $this->login_model->login_alumno($id, $password,$system);
-		
+		$alumno_result = $this->login_model->login_alumno($id, $password, $system);
+
 		if ($alumno_result > 0) {
-			
+
 			$this->sesion_alumno($alumno_result, $system);
 		} else {
 			$this->not_found();
@@ -162,7 +160,7 @@ class Login extends CI_Controller
 	private function sesion_alumno($result, $system)
 	{
 		echo 'ad3';
-		if($system == 'SYSMATER'){
+		if ($system == 'SYSMATER') {
 			$nombre_completo = trim($result->vchNombre . ' ' . $result->vchAPaterno . ' ' . $result->vchAMaterno);
 			$data = array(
 				'Tipo' => 'Alumno(a)',
@@ -174,14 +172,13 @@ class Login extends CI_Controller
 				'clvEspecial' => 00,
 				'Cuatri' => $result->vchNomCuatri,
 				'clvCuatri' => $result->vchClvCuatri,
-				'Periodo' => '20251',
+				'Periodo' => $this->determinarPeriodo(),
 				'Grupo' => $result->chvGrupo,
-				'GrupoNom' => $result-> vchGrupo,
+				'GrupoNom' => $result->vchGrupo,
 				'Password' => $result->vchContrasenia,
 				'id_tipo' => 5
 			);
-
-		}else{
+		} else {
 
 			$data = array(
 				'Tipo' => 'Alumno(a)',
@@ -193,25 +190,26 @@ class Login extends CI_Controller
 				'clvEspecial' => $result->clvEspecialidad,
 				'Cuatri' => $result->Cuatrimestre,
 				'clvCuatri' => $result->clvCuatri,
-				'Periodo' => '20251',
+				'Periodo' =>  $this->determinarPeriodo(),
 				'Grupo' => $result->chvGrupo,
-				'GrupoNom' => $result-> vchGrupo,
+				'GrupoNom' => $result->vchGrupo,
 				'Password' => $result->Password,
 				'id_tipo' => 5
 			);
-
 		}
-		
+
 		$this->session->set_userdata($data);
-		redirect($system ."/alumno/examenes");
+		redirect($system . "/alumno/examenes");
 	} // end function
 
-	private function login_docente($id, $password , $system)
+
+
+	private function login_docente($id, $password, $system)
 	{
 		// check if username and password are correct
 		$admin_result = $this->login_model->login_docente($id, $password);
 		if ($admin_result > 0) {
-			$this->sesion_docente($admin_result,$system);
+			$this->sesion_docente($admin_result, $system);
 		} else {
 			$this->not_found();
 		} // end if-else
@@ -229,10 +227,10 @@ class Login extends CI_Controller
 		);
 
 		$this->session->set_userdata($data);
-		redirect($system ."/docente/docente");
+		redirect($system . "/docente/docente");
 	} // end function
 
-	private function login_revisor($id, $password,$system)
+	private function login_revisor($id, $password, $system)
 	{
 		// check if username and password are correct
 		$admin_result = $this->login_model->login_revisor($id, $password);
@@ -254,10 +252,10 @@ class Login extends CI_Controller
 			'id_tipo' => 3
 		);
 		$this->session->set_userdata($data);
-		redirect($system ."/revisor/revisor");
+		redirect($system . "/revisor/revisor");
 	} // end function
 
-	private function login_director($id, $password , $system)
+	private function login_director($id, $password, $system)
 	{
 		// check if username and password are correct
 		$admin_result = $this->login_model->login_director($id, $password);
@@ -269,7 +267,7 @@ class Login extends CI_Controller
 	} // end function
 
 	// admin log
-	private function sesion_director($resp , $system)
+	private function sesion_director($resp, $system)
 	{
 		$Nom = $resp->Director;
 		$data = array(
@@ -279,7 +277,7 @@ class Login extends CI_Controller
 			'id_tipo' => 2
 		);
 		$this->session->set_userdata($data);
-		redirect($system ."/director/director");
+		redirect($system . "/director/director");
 	} // end function
 
 	private function login_admin($id, $password, $system)
@@ -294,7 +292,7 @@ class Login extends CI_Controller
 	} // end function
 
 	// admin log
-	private function sesion_admin($resp , $system)
+	private function sesion_admin($resp, $system)
 	{
 		$Nom = $resp->Trabajador;
 		$data = array(
@@ -304,8 +302,8 @@ class Login extends CI_Controller
 			'id_tipo' => 1
 		);
 		$this->session->set_userdata($data);
-	
-		redirect($system ."/admin/admin");
+
+		redirect($system . "/admin/admin");
 	} // end function
 
 	// not found username
@@ -410,7 +408,8 @@ class Login extends CI_Controller
 			$this->not_found();
 		} // end if-else
 	}
-	private function determinarPeriodo() {
+	private function determinarPeriodo()
+	{
 		$fechaActual = new DateTime();
 		$mes = (int) $fechaActual->format('m');
 		$año = $fechaActual->format('Y');

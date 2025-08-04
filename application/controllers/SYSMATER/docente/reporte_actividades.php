@@ -401,7 +401,10 @@ class reporte_actividades extends CI_Controller
                             $valor = '';
                             if (isset($info_actividad['practicas'][$i - 1])) {
                                 $practica_key = $info_actividad['practicas'][$i - 1];
-                                $valor = isset($datos_actividad[$practica_key]) ? $datos_actividad[$practica_key] : '';
+
+                                $valor = isset($datos_actividad[$practica_key]) && $datos_actividad[$practica_key] !== ''
+                                    ? $datos_actividad[$practica_key]
+                                    : 0;
                             }
 
                             $sheet->setCellValue($columna . $fila_datos, $valor);
@@ -570,13 +573,14 @@ class reporte_actividades extends CI_Controller
         // Agregar página
         $pdf->AddPage();
 
-        // Configurar fuente
-        $pdf->SetFont('helvetica', 'B', 12);
+        // Insertar logo
+        $pageWidth = $pdf->getPageWidth();
+        $imageWidth = 150;
+        $imageHeight = 18;
+        $x = ($pageWidth - $imageWidth) / 2;
+        $pdf->Image(base_url() . '/assets/img/logo_uthh_c.jpg', $x, 5, $imageWidth, $imageHeight, '', '', '', false, 300, '', false, false, 0, 'CM', false, false);
 
-        // Encabezado principal
-        $pdf->Cell(0, 8, 'UNIVERSIDAD TECNOLÓGICA DE LA', 0, 1, 'C');
-        $pdf->Cell(0, 8, 'HUASTECA HIDALGUENSE', 0, 1, 'C');
-        $pdf->Ln(5);
+        $pdf->Ln(10);
 
         // Crear tabla de información
         $pdf->SetFont('helvetica', 'B', 9);
@@ -752,8 +756,13 @@ class reporte_actividades extends CI_Controller
                 if ($num_practicas > 0) {
                     // Mostrar prácticas
                     foreach ($info_actividad['practicas'] as $nombre_practica) {
-                        $valor = isset($datos_actividad[$nombre_practica]) ? $datos_actividad[$nombre_practica] : '';
-                        $pdf->Cell($ancho_columna_actividad, 8, $valor, 1, 0, 'C', true);
+
+                        $valor = isset($datos_actividad[$nombre_practica]) && $datos_actividad[$nombre_practica] !== ''
+                            ? $datos_actividad[$nombre_practica]
+                            : 0;
+
+                        //$pdf->Cell($ancho_columna_actividad, 8, $valor, 1, 0, 'C', true);
+                        $pdf->Cell($ancho_columna_actividad, 8, intval($valor), 1, 0, 'C', true);
                     }
 
                     // Promedio (Cal_)

@@ -62,7 +62,7 @@
                                         <td><strong><?= htmlspecialchars($alumno['vchNombre'] . ' ' . $alumno['vchAPaterno'] . ' ' . $alumno['vchAMaterno']) ?></strong></td>
                                         <td class="text-center">
                                             <span class="badge sys-esquema-badge-complete" id="calificacion-alumno-<?= $alumno['vchMatricula'] ?>">
-                                                <?= htmlspecialchars($alumno['calificacion'] ?? '0') ?> / 10 pts
+                                                <?= htmlspecialchars(($alumno['calificacion'] == '.00' || $alumno['calificacion'] == 0 || $alumno['calificacion'] === null) ? 0 : ($alumno['calificacion'])) ?> / 10 pts
                                             </span>
                                         </td>
                                         <td class="text-center">
@@ -566,15 +566,16 @@
                     if (json.success) {
                         mostrarAlertaModal('success', '¡Evaluación individual guardada!', `Nueva calificación: ${json.calificacion}/10 pts`, true);
 
-                        // Actualizar la calificación en la tabla principal
+                        /*Actualizar la calificación en la tabla principal
                         $(`#calificacion-alumno-${idAlumno}`).empty().text(`${json.calificacion}`);
 
 
                         // Actualizar el data-calificacion del botón para futuras ediciones
-                        $(`.btn-editar-individual[data-id="${idAlumno}"]`).attr('data-calificacion', json.calificacion);
+                        $(`.btn-editar-individual[data-id="${idAlumno}"]`).attr('data-calificacion', json.calificacion);*/
 
                         setTimeout(() => {
                             $('#modalEvaluacionAlumno').modal('hide');
+                            window.location.reload();
                         }, 1500);
                     } else {
                         mostrarAlertaModal('danger', 'Error al guardar', json.message || 'No se pudo guardar la evaluación.');

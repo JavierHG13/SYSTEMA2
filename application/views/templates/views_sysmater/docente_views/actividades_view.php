@@ -61,6 +61,33 @@
             break;
         }
     }
+
+    function formatear_fecha_completa($fecha)
+    {
+        if (!$fecha) return 'Sin fecha establecida';
+        $timestamp = strtotime($fecha);
+        if (!$timestamp) return 'Fecha inválida';
+
+        $meses = [
+            1 => 'enero',
+            2 => 'febrero',
+            3 => 'marzo',
+            4 => 'abril',
+            5 => 'mayo',
+            6 => 'junio',
+            7 => 'julio',
+            8 => 'agosto',
+            9 => 'septiembre',
+            10 => 'octubre',
+            11 => 'noviembre',
+            12 => 'diciembre'
+        ];
+        $dia = date('j', $timestamp);
+        $mes = $meses[(int)date('n', $timestamp)];
+        $año = date('Y', $timestamp);
+        $hora = date('H:i', $timestamp);
+        return "{$dia} de {$mes} de {$año} a las {$hora}";
+    }
     ?>
 
     <?php if (!$tiene_actividades): ?>
@@ -114,8 +141,7 @@
                                             <thead style="background: var(--sys-primary) !important; color: white !important;">
                                                 <tr>
                                                     <th style="width: 300px;">Actividad</th>
-                                                    <th>Fecha de entrega</th>
-                                                    <th>Hora de entrega</th>
+                                                    <th>Fecha y hora de entrega</th>
                                                     <th>Calificados</th>
                                                     <th>Acciones</th>
                                                 </tr>
@@ -124,8 +150,9 @@
                                                 <?php foreach ($individual as $actividad): ?>
                                                     <tr>
                                                         <td><?= $actividad->titulo; ?></td>
-                                                        <td><?= date('Y/m/d', strtotime($actividad->fecha_entrega)); ?></td>
-                                                        <td><?= date('H:i', strtotime($actividad->fecha_entrega)); ?> horas</td>
+                                                        <td><?= formatear_fecha_completa($actividad->fecha_entrega) ?></td>
+
+
                                                         <td><?= $actividad->calificados_individual; ?> / <?= $actividad->numero_alumnos; ?></td>
 
                                                         <td>
@@ -170,8 +197,7 @@
                                             <thead style="background: var(--sys-primary) !important; color: white !important;">
                                                 <tr>
                                                     <th style="width: 300px;">Actividad</th>
-                                                    <th>Fecha de entrega</th>
-                                                    <th>Hora de entrega</th>
+                                                    <th>Fecha y hora de entrega</th>
                                                     <th>Calificados</th>
                                                     <th>Acciones</th>
                                                 </tr>
@@ -180,8 +206,7 @@
                                                 <?php foreach ($equipo as $actividad): ?>
                                                     <tr>
                                                         <td><?= $actividad->titulo; ?></td>
-                                                        <td><?= date('Y/m/d', strtotime($actividad->fecha_entrega)); ?></td>
-                                                        <td><?= date('H:i', strtotime($actividad->fecha_entrega)); ?></td>
+                                                        <td><?= formatear_fecha_completa($actividad->fecha_entrega) ?></td>
                                                         <td><?= $actividad->equipos_calificados; ?> / <?= $actividad->numero_equipos; ?></td>
 
                                                         <td>

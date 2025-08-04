@@ -123,6 +123,33 @@
         transform: scale(1.1);
     }
 
+
+    .remove-esquema-editar {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: var(--sys-danger);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 12px;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .remove-esquema-editar:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+
+
+
     #totalDisplay.alert-success {
         background: #d4edda !important;
         border-color: var(--sys-success) !important;
@@ -183,6 +210,38 @@
             transform: translateX(100%);
             opacity: 0;
         }
+    }
+
+    .btn-agregar-mas {
+        background: #218838;
+        color: white;
+
+        padding: 10px 20px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+
+
+    }
+
+    .btn-agregar-mas:hover {
+
+        background: var(--sys-success);
+        color: white;
+        border: none;
+        
+    }
+
+    .modal-header {
+        background: var(--sys-primary);
+        color: white;
+    }
+
+    #totalDisplay {
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        border: 2px solid;
     }
 </style>
 
@@ -252,17 +311,24 @@
                     ?>
                     <div class="panel sys-esquema-panel sys-rounded" style="margin-bottom: 20px;">
                         <div class="panel-heading" id="h<?= $parcial; ?>" style="padding: 20px;">
-                            <h4 style="margin: 0;">
+                            <h4 style="margin: 0; display: flex; justify-content: space-between; align-items: center;">
                                 <a data-toggle="collapse" data-parent="#accordion" href="#p<?= $parcial; ?>" class="sys-esquema-accordion-toggle" style="text-decoration: none !important; color: var(--sys-primary) !important; font-weight: 600;">
                                     <span class="glyphicon glyphicon-education"></span> <?= $parcial; ?>° Parcial
                                     <span class="badge sys-esquema-badge" style="margin-left: 10px;"><?= count($componentes_parcial) ?> elementos</span>
                                     <span class="badge sys-esquema-badge-<?= $total_parcial >= 10 ? 'complete' : 'progress' ?>" style="margin-left: 5px;">
                                         <?= number_format($total_parcial, 1) ?>/10 pts
                                     </span>
-                                    <span class="glyphicon glyphicon-chevron-down pull-right" style="color: var(--sys-primary);"></span>
                                 </a>
+                                <button class="btn btn-warning btn-sm editar-parcial"
+                                    data-parcial="<?= $parcial ?>"
+                                    title="Editar parcial completo">
+                                    <span class="glyphicon glyphicon-edit"></span> Editar
+                                </button>
+
                             </h4>
                         </div>
+
+
                         <div id="p<?= $parcial; ?>" class="panel-collapse collapse">
                             <div class="panel-body" style="padding: 25px;">
                                 <div class="table-responsive sys-rounded" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
@@ -271,7 +337,7 @@
                                             <tr>
                                                 <th>Esquema de Evaluación</th>
                                                 <th class="text-center">Puntos</th>
-                                                <th class="text-center">Acciones</th>
+
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -281,11 +347,7 @@
                                                     <td class="text-center">
                                                         <span class="badge sys-esquema-badge"><?= number_format($comp->valor_componente, 1) ?> pts</span>
                                                     </td>
-                                                    <td class="text-center">
-                                                        <button class="btn sys-btn-danger btn-xs eliminar" data-id="<?= $comp->id_valor_componente ?>">
-                                                            <span class="glyphicon glyphicon-trash"></span>
-                                                        </button>
-                                                    </td>
+
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
@@ -308,11 +370,14 @@
 </div>
 
 
+
+
+<!-- Modal Simplificado -->
 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel">
     <div class="modal-dialog" role="document">
-        <form action="<?= base_url('sysmater/docente/gestionar_materia/guardar_componente') ?>" method="post">
+        <form action="#" method="post" id="formEsquemas">
             <div class="modal-content sys-rounded">
-                <div class="modal-header sys-esquema-modal-header">
+                <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -321,81 +386,60 @@
                     </h4>
                 </div>
                 <div class="modal-body">
-                    <?php if ($parciales_disponibles == 0): ?>
-                        <div class="alert alert-info text-center sys-rounded" style="background: var(--sys-success); border: none;">
-                            <span class="glyphicon glyphicon-check-circle" style="font-size: 48px; display: block; margin-bottom: 15px; color: var(--sys-primary);"></span>
-                            <h4><strong>¡Esquema Completo!</strong></h4>
-                            <p>Todos los parciales están completos (10/10 puntos).<br>
-                                No se pueden agregar más componentes al esquema de evaluación.</p>
+                    <!-- Selección de Parcial -->
+                    <div class="form-group">
+                        <label for="parcial"><strong>Parcial *</strong></label>
+                        <select name="parcial" id="parcial" class="form-control sys-esquema-form-control sys-rounded" required>
+                            <option value="">Selecciona una opción</option>
+                            <?php for ($p = 1; $p <= 3; $p++): ?>
+                                <?php
+                                $total_actual = $totales_por_parcial[$p] ?? 0;
+                                $disponible = 10 - $total_actual;
+                                $disabled = $disponible <= 0 ? 'disabled' : '';
+                                ?>
+                                <option value="<?= $p ?>" <?= $disabled ?>>
+                                    <?= $p ?>° Parcial
+                                    <?php if ($disponible > 0): ?>
+                                        (<?= number_format($disponible, 1) ?> pts disponibles)
+                                    <?php else: ?>
+                                        (COMPLETO - 10/10 pts)
+                                    <?php endif; ?>
+                                </option>
+                            <?php endfor; ?>
+                        </select>
+                        <small class="help-block">
+                            Cada parcial puede tener máximo 10.0 puntos en total
+                        </small>
+                    </div>
+
+                    <!-- Contenedor de Esquemas -->
+                    <div id="esquemasContainer" style="display: none;">
+                        <!-- Los esquemas se generarán aquí -->
+                    </div>
+
+                    <!-- Botón Agregar Más -->
+                    <button type="button" id="btnAgregarMas" class="btn btn-agregar-mas" style="display: none;">
+                        <span class="glyphicon glyphicon-plus"></span> Agregar Otro Esquema
+                    </button>
+
+                    <!-- Display del Total -->
+                    <div id="totalDisplay" style="display: none;">
+                        <div class="text-center">
+                            <span class="glyphicon glyphicon-calculator"></span>
+                            <strong>Total: <span id="totalPuntos">0.0</span> / <span id="maxPuntos">10.0</span> puntos</strong>
+                            <div id="totalEstado" style="margin-top: 5px; font-size: 14px;"></div>
                         </div>
-                    <?php else: ?>
-                        <div class="form-group">
-                            <label for="parcial"><strong>Parcial *</strong></label>
-                            <select name="parcial" id="parcial" class="form-control sys-esquema-form-control sys-rounded" required title="Seleccione un parcial">
-                                <option value="">Selecciona una opción</option>
-                                <?php for ($p = 1; $p <= 3; $p++): ?>
-                                    <?php
-                                    $total_actual = $totales_por_parcial[$p] ?? 0;
-                                    $disponible = 10 - $total_actual;
-                                    $disabled = $disponible <= 0 ? 'disabled' : '';
-                                    ?>
-                                    <option value="<?= $p ?>" <?= $disabled ?>>
-                                        <?= $p ?>° Parcial
-                                        <?php if ($disponible > 0): ?>
-                                            (<?= number_format($disponible, 1) ?> pts disponibles)
-                                        <?php else: ?>
-                                            (COMPLETO - 10/10 pts)
-                                        <?php endif; ?>
-                                    </option>
-                                <?php endfor; ?>
-                            </select>
-                            <small class="help-block sys-text-muted">
-                                Cada parcial puede tener máximo 10.0 puntos en total
-                            </small>
-                        </div>
+                    </div>
 
-
-                        <!-- Selector de Cantidad -->
-                        <div class="form-group">
-                            <label><strong>¿Cuántos esquemas deseas crear?</strong></label>
-                            <div class="cantidad-selector">
-                                <button type="button" class="cantidad-btn" id="decrementarCantidad">-</button>
-                                <input type="number" id="cantidadEsquemas" class="form-control cantidad-input sys-esquema-form-control"
-                                    value="2" min="2" max="10" readonly>
-                                <button type="button" class="cantidad-btn" id="incrementarCantidad">+</button>
-                                <span style="margin-left: 10px; color: #6c757d;">
-                                    <small>Mínimo 2, máximo 10 elementos</small>
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Contenedor de Esquemas Dinámicos -->
-                        <div id="esquemasContainer">
-                            <!-- Los esquemas se generarán aquí dinámicamente -->
-                        </div>
-
-
-                        <div id="totalDisplay" class="alert sys-rounded" style="display: none; margin-top: 15px;">
-                            <div class="text-center">
-                                <span class="glyphicon glyphicon-calculator"></span>
-                                <strong>Total: <span id="totalPuntos">0.0</span> / 10.0 puntos</strong>
-                                <div id="totalEstado" style="margin-top: 5px; font-size: 14px;"></div>
-                            </div>
-                        </div>
-
-                        <input type="hidden" name="vchClvMateria" id="vchClvMateria" value="<?= $vchClvMateria ?>">
-
-                    <?php endif; ?>
+                    <input type="hidden" name="vchClvMateria" value="<?= $vchClvMateria ?>">
                 </div>
-                <div class="modal-footer" style="background: var(--sys-neutral);">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-danger sys-rounded" data-dismiss="modal">
                         <span class="glyphicon glyphicon-remove"></span> Cancelar
                     </button>
-                    <?php if ($parciales_disponibles > 0): ?>
-                        <button type="submit" class="btn sys-esquema-btn sys-rounded" id="btn-guardar">
-                            <span class="glyphicon glyphicon-floppy-disk"></span> Guardar
-                        </button>
-                    <?php endif; ?>
+                    <button type="submit" class="btn btn-primary sys-rounded" id="btn-guardar" disabled>
+                        <span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+                    </button>
                 </div>
             </div>
         </form>
@@ -425,17 +469,80 @@
 </div>
 
 
+<!-- Modal para Editar Parcial Completo -->
+<div class="modal fade" id="modalEditarParcial" tabindex="-1" role="dialog" aria-labelledby="modalEditarParcialLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <form action="#" method="post" id="formEditarParcial">
+            <div class="modal-content sys-rounded">
+                <div class="modal-header" style="color: white;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">
+                        <span class="glyphicon glyphicon-edit"></span> Editar <span id="editarTituloParcial"></span>
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <!-- Información del parcial -->
+                    <div class="alert alert-info sys-rounded">
+                        <span class="glyphicon glyphicon-info-sign"></span>
+                        <strong>Editando:</strong> <span id="editarInfoParcial"></span><br>
+                        <small>Modifica los esquemas manteniendo un total de exactamente 10.0 puntos</small>
+                    </div>
+
+                    <!-- Contenedor de Esquemas Editables -->
+                    <div id="editarEsquemasContainer">
+                        <!-- Los esquemas se cargarán aquí dinámicamente -->
+                    </div>
+
+                    <!-- Botón Agregar Más -->
+                    <button type="button" id="editarBtnAgregarMas" class="btn btn-agregar-mas" style="display: none;">
+                        <span class="glyphicon glyphicon-plus"></span> Agregar Otro Esquema
+                    </button>
+
+                    <!-- Display del Total -->
+                    <div id="editarTotalDisplay" class="alert sys-rounded" style="margin-top: 15px;">
+                        <div class="text-center">
+                            <span class="glyphicon glyphicon-calculator"></span>
+                            <strong>Total: <span id="editarTotalPuntos">0.0</span> / 10.0 puntos</strong>
+                            <div id="editarTotalEstado" style="margin-top: 5px; font-size: 14px;"></div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="parcial_editar" id="editarParcialNumero">
+                    <input type="hidden" name="vchClvMateria" value="<?= $vchClvMateria ?>">
+                </div>
+                <div class="modal-footer" style="background: var(--sys-neutral);">
+                    <button type="button" class="btn btn-danger sys-rounded" data-dismiss="modal">
+                        <span class="glyphicon glyphicon-remove"></span> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning sys-rounded" id="btn-actualizar-parcial" disabled>
+                        <span class="glyphicon glyphicon-floppy-disk"></span> Actualizar Parcial
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 
 <!-- Contenedor de mensajes -->
 <div id="msgFlash"></div>
 
 <script>
-    $(function() {
+    $(document).ready(function() {
         var totales = <?= json_encode($totales_por_parcial) ?>;
         var disponibles = <?= $parciales_disponibles ?>;
         let esquemaCounter = 0;
+        let idAEliminar = null;
 
+        // Datos de parciales desde PHP
+        const parciales = <?= json_encode([
+                                1 => ['disponible' => 10 - ($totales_por_parcial[1] ?? 0), 'total' => 10],
+                                2 => ['disponible' => 10 - ($totales_por_parcial[2] ?? 0), 'total' => 10],
+                                3 => ['disponible' => 10 - ($totales_por_parcial[3] ?? 0), 'total' => 10]
+                            ]) ?>;
 
         // Accordion con scroll
         $('#accordion').on('show.bs.collapse', function(e) {
@@ -444,87 +551,108 @@
             }, 500), 100);
         });
 
-        // Generar esquemas dinámicamente
-        function generarEsquemas(cantidad) {
-            const container = $('#esquemasContainer');
-            const parcialSeleccionado = parseInt($('#parcial').val());
+        // Cerrar accordion
+        $('.sys-esquema-close').click(function(e) {
+            e.preventDefault();
+            var $target = $($(this).data('target'));
+            if ($target.hasClass('in')) {
+                $target.collapse('hide');
+                setTimeout(() => $('html, body').animate({
+                    scrollTop: $('#h' + $target.attr('id').slice(1)).offset().top - 20
+                }, 500), 100);
+            }
+        });
 
-            if (!parcialSeleccionado) {
-                container.empty();
+        // Cuando se selecciona un parcial
+        $('#parcial').change(function() {
+            const parcialSeleccionado = parseInt($(this).val());
+
+            if (parcialSeleccionado && parciales[parcialSeleccionado].disponible > 0) {
+                $('#esquemasContainer').show();
+                $('#btnAgregarMas').show();
+                $('#totalDisplay').show();
+                $('#esquemasContainer').empty();
+                esquemaCounter = 0;
+                agregarEsquema();
+                $('#maxPuntos').text(parciales[parcialSeleccionado].disponible.toFixed(1));
+            } else {
+                $('#esquemasContainer').hide();
+                $('#btnAgregarMas').hide();
                 $('#totalDisplay').hide();
-                // Generar esquemas vacíos para mostrar la estructura
-                for (let i = 0; i < cantidad; i++) {
-                    const esquemaHTML = `
-        <div class="esquema-item" data-index="${i}">
-            <button type="button" class="remove-esquema" style="display: ${cantidad > 2 ? 'flex' : 'none'}">×</button>
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="form-group">
-                        <label><strong>Esquema ${i + 1} *</strong></label>
-                        <input type="text" name="componentes[${i}][nombre]" class="form-control sys-esquema-form-control sys-rounded esquema-nombre" 
-                               placeholder="Ej: Examen, Proyecto, Participación..." required>
+                $('#esquemasContainer').empty();
+                esquemaCounter = 0;
+            }
+            calcularTotal();
+        });
+
+        // Función para agregar un nuevo esquema
+        function agregarEsquema() {
+            const parcialSeleccionado = parseInt($('#parcial').val());
+            if (!parcialSeleccionado) return;
+
+            const disponible = parciales[parcialSeleccionado].disponible;
+            const esquemaHTML = `
+            <div class="esquema-item" data-index="${esquemaCounter}">
+                ${esquemaCounter > 0 ? '<button type="button" class="remove-esquema">×</button>' : ''}
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label><strong>Esquema ${esquemaCounter + 1} *</strong></label>
+                            <input type="text" name="componentes[${esquemaCounter}][nombre]" 
+                                   class="form-control sys-esquema-form-control sys-rounded esquema-nombre" 
+                                   placeholder="Ej: Examen, Proyecto, Participación..." required>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label><strong>Puntos *</strong></label>
-                        <input type="number" name="componentes[${i}][valor]" class="form-control sys-esquema-form-control sys-rounded esquema-puntos" 
-                               min="0.1" max="10" step="0.1" placeholder="0.0" required disabled>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label><strong>Puntos *</strong></label>
+                            <input type="number" name="componentes[${esquemaCounter}][valor]" 
+                                   class="form-control sys-esquema-form-control sys-rounded esquema-puntos" 
+                                   min="0.1" max="${disponible}" step="0.1" placeholder="0.0" required>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         `;
-                    container.append(esquemaHTML);
-                }
-                return;
-            }
+            $('#esquemasContainer').append(esquemaHTML);
+            esquemaCounter++;
+            if (esquemaCounter >= 10) $('#btnAgregarMas').hide();
+        }
 
-            const disponible = 10 - (totales[parcialSeleccionado] || 0);
+        // Eliminar esquema en modal agregar
+        $(document).on('click', '.remove-esquema', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-            container.empty();
-            esquemaCounter = 0;
-
-            for (let i = 0; i < cantidad; i++) {
-                const esquemaHTML = `
-                <div class="esquema-item" data-index="${i}">
-                    <button type="button" class="remove-esquema" style="display: ${cantidad > 2 ? 'flex' : 'none'}">×</button>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label><strong>Esquema ${i + 1} *</strong></label>
-                                <input type="text" name="componentes[${i}][nombre]" class="form-control sys-esquema-form-control sys-rounded esquema-nombre" 
-                                       placeholder="Ej: Examen, Proyecto, Participación..." required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label><strong>Puntos *</strong></label>
-                                <input type="number" name="componentes[${i}][valor]" class="form-control sys-esquema-form-control sys-rounded esquema-puntos" 
-                                       min="0.1" max="${disponible}" step="0.1" placeholder="0.0" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-                container.append(esquemaHTML);
-            }
-
-            // Distribución automática inteligente
-            if (disponible > 0) {
-                const puntosBase = Math.floor((disponible / cantidad) * 10) / 10;
-                const resto = Math.round((disponible - (puntosBase * cantidad)) * 10) / 10;
-
-                container.find('.esquema-puntos').each(function(index) {
-                    let valor = puntosBase;
-                    if (index < Math.abs(resto * 10)) {
-                        valor += resto > 0 ? 0.1 : -0.1;
-                    }
-                    $(this).val(Math.max(0.1, valor).toFixed(1));
-                });
-            }
-
+            const $item = $(this).closest('.esquema-item');
+            $item.remove();
+            reindexarEsquemas();
             calcularTotal();
+
+            // Mostrar botón agregar más si hay menos de 10
+            if ($('.esquema-item').length < 10) {
+                $('#btnAgregarMas').show();
+            }
+        });
+
+        // Botón agregar más esquemas
+        $('#btnAgregarMas').click(function() {
+            agregarEsquema();
+            calcularTotal();
+        });
+
+        // Reindexar esquemas después de eliminar
+        function reindexarEsquemas() {
+            $('.esquema-item').each(function(index) {
+                $(this).attr('data-index', index);
+                $(this).find('label strong').text(`Esquema ${index + 1} *`);
+                $(this).find('[name^="componentes"]').each(function() {
+                    const name = $(this).attr('name');
+                    const newName = name.replace(/componentes\[\d+\]/, `componentes[${index}]`);
+                    $(this).attr('name', newName);
+                });
+            });
+            esquemaCounter = $('.esquema-item').length;
         }
 
         // Calcular total y validar
@@ -532,38 +660,44 @@
             const parcialSeleccionado = parseInt($('#parcial').val());
             if (!parcialSeleccionado) return;
 
-            const disponible = 10 - (totales[parcialSeleccionado] || 0);
+            const disponible = parciales[parcialSeleccionado].disponible;
             let total = 0;
             let todosCompletos = true;
+            let hayDatos = false;
 
             $('.esquema-puntos').each(function() {
                 const valor = parseFloat($(this).val()) || 0;
                 total += valor;
-
                 const $item = $(this).closest('.esquema-item');
                 const nombre = $item.find('.esquema-nombre').val().trim();
 
-                if (!nombre || valor <= 0) {
+                if (nombre || valor > 0) hayDatos = true;
+
+                if (hayDatos && (!nombre || valor <= 0)) {
                     todosCompletos = false;
                     $item.removeClass('valid').addClass('invalid');
-                } else {
+                } else if (hayDatos && nombre && valor > 0) {
                     $item.removeClass('invalid').addClass('valid');
+                } else {
+                    $item.removeClass('valid invalid');
                 }
             });
 
-            total = Math.round(total * 10) / 10;
+            if (!hayDatos) {
+                $('#btn-guardar').prop('disabled', true);
+                return;
+            }
 
+            total = Math.round(total * 10) / 10;
             $('#totalPuntos').text(total.toFixed(1));
-            $('#totalDisplay').show();
 
             const $totalDisplay = $('#totalDisplay');
             const $totalEstado = $('#totalEstado');
             const $btnGuardar = $('#btn-guardar');
 
-            // Limpiar clases previas
             $totalDisplay.removeClass('alert-success alert-warning alert-danger');
 
-            if (total === disponible && todosCompletos && disponible > 0) {
+            if (total === disponible && todosCompletos) {
                 $totalDisplay.addClass('alert-success');
                 $totalEstado.html('<span class="glyphicon glyphicon-ok"></span> ¡Perfecto! Los esquemas completan exactamente los puntos disponibles');
                 $btnGuardar.prop('disabled', false);
@@ -582,203 +716,452 @@
             }
         }
 
-        // Eventos de cantidad
-        $('#incrementarCantidad').click(function() {
-            const $input = $('#cantidadEsquemas');
-            const valor = parseInt($input.val());
-            if (valor < 10) {
-                $input.val(valor + 1);
-                generarEsquemas(valor + 1);
-            }
-        });
-
-        $('#decrementarCantidad').click(function() {
-            const $input = $('#cantidadEsquemas');
-            const valor = parseInt($input.val());
-            if (valor > 2) {
-                $input.val(valor - 1);
-                generarEsquemas(valor - 1);
-            }
-        });
-
-        // Cambio de parcial
-        $('#parcial').change(function() {
-            const cantidad = parseInt($('#cantidadEsquemas').val());
-            generarEsquemas(cantidad);
-        });
-
-        // Eliminar esquema individual
-        $(document).on('click', '.remove-esquema', function() {
-            const cantidad = $('.esquema-item').length;
-            if (cantidad > 2) {
-                $(this).closest('.esquema-item').remove();
-
-                // Reindexar
-                $('.esquema-item').each(function(index) {
-                    $(this).attr('data-index', index);
-                    $(this).find('label strong').text(`Esquema ${index + 1} *`);
-                    $(this).find('[name^="componentes"]').each(function() {
-                        const name = $(this).attr('name');
-                        const newName = name.replace(/componentes\[\d+\]/, `componentes[${index}]`);
-                        $(this).attr('name', newName);
-                    });
-                });
-
-                calcularTotal();
-            }
-        });
-
         // Eventos de cambio en inputs
         $(document).on('input change', '.esquema-nombre, .esquema-puntos', function() {
             calcularTotal();
         });
 
-
-
-
-
-
-        // Cerrar accordion
-        $('.sys-esquema-close').click(function(e) {
-            e.preventDefault();
-            var $target = $($(this).data('target'));
-            if ($target.hasClass('in')) {
-                $target.collapse('hide');
-                setTimeout(() => $('html, body').animate({
-                    scrollTop: $('#h' + $target.attr('id').slice(1)).offset().top - 20
-                }, 500), 100);
-            }
-        });
-
-        // Validación en tiempo real
-        if (disponibles > 0) {
-            $('#parcial, #valor_componente').on('change input', function() {
-                var parcial = parseInt($('#parcial').val()),
-                    valor = parseFloat($('#valor_componente').val()) || 0;
-                var $info = $('#validacion-info'),
-                    $btn = $('#btn-guardar');
-
-                if (!parcial || valor <= 0) {
-                    $info.hide();
-                    $btn.prop('disabled', false);
-                    return;
-                }
-
-                var actual = totales[parcial] || 0,
-                    nuevo = actual + valor;
-
-                if (nuevo > 10) {
-                    $info.removeClass('alert-info alert-success').addClass('alert-danger');
-                    $('#validacion-icon').removeClass().addClass('glyphicon glyphicon-exclamation-sign');
-                    $('#validacion-texto').html('<strong>¡Error!</strong> El parcial ' + parcial + '° ya tiene ' + actual.toFixed(1) + ' puntos. Solo quedan ' + (10 - actual).toFixed(1) + ' puntos disponibles.');
-                    $info.show();
-                    $btn.prop('disabled', true);
-                } else if (nuevo === 10) {
-                    $info.removeClass('alert-danger alert-info').addClass('alert-success');
-                    $('#validacion-icon').removeClass().addClass('glyphicon glyphicon-ok');
-                    $('#validacion-texto').html('<strong>¡Perfecto!</strong> El parcial ' + parcial + '° completará exactamente 10.0 puntos.');
-                    $info.show();
-                    $btn.prop('disabled', false);
-                } else {
-                    $info.removeClass('alert-danger alert-success').addClass('alert-info');
-                    $('#validacion-icon').removeClass().addClass('glyphicon glyphicon-info-sign');
-                    $('#validacion-texto').html('El parcial ' + parcial + '° tendrá ' + nuevo.toFixed(1) + ' puntos. Quedarán ' + (10 - nuevo).toFixed(1) + ' puntos disponibles.');
-                    $info.show();
-                    $btn.prop('disabled', false);
-                }
-            });
-
-            // Validación al enviar
-            $('form').submit(function(e) {
-                var parcial = parseInt($('#parcial').val()),
-                    valor = parseFloat($('#valor_componente').val());
-                if (!parcial || valor <= 0 || valor > 10 || (totales[parcial] || 0) + valor > 10) {
-                    e.preventDefault();
-                    mostrarMensaje('Por favor, complete todos los campos correctamente.', 'error');
-                    return false;
-                }
-            });
-        }
-
-        let idAEliminar = null;
-
-        function confirmarEliminacion(id) {
-            idAEliminar = id;
-            $('#modalConfirmarEliminacion').modal('show');
-        }
-
-        // Eliminar
+        // Eliminar componente
         $(document).on('click', '.eliminar', function() {
-            var id = $(this).data('id');
-            confirmarEliminacion(id); // Llama al modal de confirmación
+            idAEliminar = $(this).data('id');
+            $('#modalConfirmarEliminacion').modal('show');
         });
 
         $('#btnConfirmarEliminar').click(function() {
             if (!idAEliminar) return;
-
             $.post("<?= base_url('sysmater/docente/gestionar_materia/eliminar_componente') ?>", {
                 id_valor_componente: idAEliminar
             }, function(response) {
                 $('#modalConfirmarEliminacion').modal('hide');
-
                 if (response === 'ok') {
-
                     mostrarMensaje("Esquema de evaluacion eliminado correctamente.", "success");
                     setTimeout(() => location.reload(), 1500);
                 } else if (response === 'en_uso') {
-
                     mostrarMensaje("Este componente está siendo utilizado en una o más actividades y no puede ser eliminado.", "error");
-
                 } else {
                     mostrarMensaje('Error al eliminar el componente.', 'error');
                 }
-
                 idAEliminar = null;
             });
         });
 
-        // Generar esquemas al abrir el modal
-        $('#modal').on('shown.bs.modal', function() {
-            if (disponibles > 0) {
-                const cantidad = parseInt($('#cantidadEsquemas').val());
-                generarEsquemas(cantidad);
-            }
+        // Limpiar modal al cerrar
+        $('#modal').on('hidden.bs.modal', function() {
+            $(this).find('form')[0].reset();
+            $('#esquemasContainer').hide().empty();
+            $('#btnAgregarMas').hide();
+            $('#totalDisplay').hide();
+            $('#btn-guardar').prop('disabled', true);
+            esquemaCounter = 0;
         });
 
-
-        // Limpiar modal
-        $('#modal').on('hidden.bs.modal', function() {
-            if (disponibles > 0) {
-                $(this).find('form')[0].reset();
-                $('#validacion-info').hide();
-                $('#btn-guardar').prop('disabled', false);
+        // Envío del formulario
+        $('#formEsquemas').submit(function(e) {
+            e.preventDefault();
+            if ($('.esquema-item').length === 0) {
+                alert('Debe agregar al menos un esquema');
+                return;
             }
+
+
+            console.log("Enviando datos")
+            $.ajax({
+                url: '<?= base_url('sysmater/docente/gestionar_materia/guardar_componente') ?>',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response === 'ok') {
+                        mostrarMensaje("Esquemas guardados correctamente.", "success");
+                        $('#modal').modal('hide');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        mostrarMensaje('Error al guardar los esquemas.', 'error');
+                    }
+                },
+                error: function() {
+                    mostrarMensaje('Error de conexión.', 'error');
+                }
+            });
         });
     });
-
 
     // Función para mostrar mensajes
     function mostrarMensaje(mensaje, tipo = "info") {
         const msgFlash = document.getElementById('msgFlash');
-
         const alertClass = tipo === "success" ? "alert-success" : "alert-error";
-
         msgFlash.innerHTML = `
-                <div class="alert ${alertClass}" role="alert">
-                    <i class="fas ${tipo === "success" ? "fa-check-circle" : "fa-exclamation-triangle"}"></i>
-                    ${mensaje}
-                </div>
-            `;
-
-        // Auto-ocultar después de 5 segundos
+        <div class="alert ${alertClass}" role="alert">
+            <i class="fas ${tipo === "success" ? "fa-check-circle" : "fa-exclamation-triangle"}"></i>
+            ${mensaje}
+        </div>
+    `;
         setTimeout(() => {
             const alertDiv = msgFlash.querySelector('.alert');
             if (alertDiv) {
                 alertDiv.classList.add('fade-out');
-                setTimeout(() => {
-                    msgFlash.innerHTML = '';
-                }, 500);
+                setTimeout(() => msgFlash.innerHTML = '', 500);
             }
         }, 5000);
     }
+
+
+    //Funciones para editar
+    // Variables para edición de parcial
+    let editarEsquemaCounter = 0;
+    let esquemasParcialOriginales = [];
+
+    // Evento click para editar parcial
+    $(document).on('click', '.editar-parcial', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const parcial = $(this).data('parcial');
+        console.log('Editando parcial:', parcial);
+
+        // Obtener componentes del parcial
+        $.ajax({
+            url: '<?= base_url('sysmater/docente/gestionar_materia/obtener_componentes_parcial') ?>',
+            method: 'POST',
+            data: {
+                parcial: parcial,
+                vchClvMateria: '<?= $vchClvMateria ?>'
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Respuesta del servidor:', response);
+
+                if (response.success) {
+                    abrirModalEditarParcial(parcial, response.componentes);
+                } else {
+                    mostrarMensaje('Error: ' + (response.message || 'No se pudieron cargar los componentes'), 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', status, error);
+                console.error('Respuesta:', xhr.responseText);
+                mostrarMensaje('Error de conexión al cargar los componentes del parcial.', 'error');
+            }
+        });
+    });
+
+    // Función para abrir modal de editar parcial completo
+    function abrirModalEditarParcial(parcial, componentes) {
+        console.log('Abriendo modal para parcial:', parcial, 'con componentes:', componentes);
+
+        $('#editarParcialNumero').val(parcial);
+        $('#editarTituloParcial').text(parcial + '° Parcial');
+        $('#editarInfoParcial').text(parcial + '° Parcial - ' + componentes.length + ' componente(s)');
+
+        cargarEsquemasParcial(parcial, componentes);
+        $('#modalEditarParcial').modal('show');
+    }
+
+    // Cargar esquemas existentes del parcial
+    function cargarEsquemasParcial(parcial, componentes) {
+        console.log('Cargando esquemas para parcial:', parcial, componentes);
+
+        // Guardar esquemas originales para comparación
+        esquemasParcialOriginales = componentes.map(comp => ({
+            id: comp.id_valor_componente,
+            nombre: comp.componente,
+            puntos: parseFloat(comp.valor_componente)
+        }));
+
+        // Limpiar contenedor
+        $('#editarEsquemasContainer').empty();
+        editarEsquemaCounter = 0;
+
+        // Cargar cada esquema existente
+        if (componentes && componentes.length > 0) {
+            componentes.forEach(function(comp, index) {
+                agregarEsquemaEdicion(comp.id_valor_componente, comp.componente, comp.valor_componente);
+            });
+        } else {
+            // Si no hay esquemas, agregar uno vacío
+            agregarEsquemaEdicion('', '', '');
+        }
+
+        // Mostrar botón agregar más si hay menos de 10
+        if (editarEsquemaCounter < 10) {
+            $('#editarBtnAgregarMas').show();
+        } else {
+            $('#editarBtnAgregarMas').hide();
+        }
+
+        // Calcular total inicial
+        calcularTotalEdicion();
+    }
+
+    // Función para agregar esquema en edición
+    function agregarEsquemaEdicion(id = '', nombre = '', puntos = '') {
+        const esquemaHTML = `
+        <div class="esquema-item" data-index="${editarEsquemaCounter}">
+            ${editarEsquemaCounter > 0 || esquemasParcialOriginales.length > 1 ? '<button type="button" class="remove-esquema-editar">×</button>' : ''}
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label><strong>Esquema ${editarEsquemaCounter + 1} *</strong></label>
+                        <input type="text" name="esquemas[${editarEsquemaCounter}][nombre]" 
+                               class="form-control sys-esquema-form-control sys-rounded editar-esquema-nombre" 
+                               placeholder="Ej: Examen, Proyecto, Participación..." 
+                               value="${nombre}" required>
+                        <input type="hidden" name="esquemas[${editarEsquemaCounter}][id]" value="${id}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label><strong>Puntos *</strong></label>
+                        <input type="number" name="esquemas[${editarEsquemaCounter}][puntos]" 
+                               class="form-control sys-esquema-form-control sys-rounded editar-esquema-puntos" 
+                               min="0.1" max="10" step="0.1" placeholder="0.0" 
+                               value="${puntos}" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        $('#editarEsquemasContainer').append(esquemaHTML);
+        editarEsquemaCounter++;
+
+        // Ocultar botón si se alcanza el máximo
+        if (editarEsquemaCounter >= 10) {
+            $('#editarBtnAgregarMas').hide();
+        }
+    }
+
+    // Botón agregar más esquemas en edición
+    $('#editarBtnAgregarMas').click(function() {
+        agregarEsquemaEdicion();
+        calcularTotalEdicion();
+    });
+
+    $(document).on('click', '#editarEsquemasContainer .remove-esquema-editar', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $item = $(this).closest('.esquema-item');
+        const id = $item.find('input[type="hidden"]').val();
+
+        console.log("Id_esquema:", id, "tipo:", typeof id, "longitud:", id.length);
+        console.log("Evaluación if (id):", !!id);
+
+        if (id) {
+            console.log("ENTRANDO AL IF - iniciando AJAX");
+
+            $.ajax({
+                url: '<?= base_url('sysmater/docente/gestionar_materia/verificar_componente_en_uso') ?>',
+                method: 'POST',
+                data: {
+                    id_valor_componente: id
+                },
+                beforeSend: function() {
+                    console.log("AJAX - beforeSend ejecutado");
+                },
+                success: function(response) {
+
+                    const data = JSON.parse(response);
+
+                    if (data.en_uso === true) {
+                        mostrarMensaje('Este esquema tiene actividades ligadas y no se puede eliminar.', 'error');
+                    } else {
+                        console.log("AJAX - procediendo a eliminar");
+                        $item.remove();
+                        reindexarEsquemasEdicion();
+                        calcularTotalEdicion();
+
+                        if ($('#editarEsquemasContainer .esquema-item').length < 10) {
+                            $('#editarBtnAgregarMas').show();
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log("AJAX - error ejecutado:", status, error);
+                    console.log("AJAX - respuesta completa:", xhr.responseText);
+                    mostrarMensaje('Error al verificar el esquema.', 'error');
+                }
+            });
+        } else {
+            console.log("ENTRANDO AL ELSE");
+            $item.remove();
+            reindexarEsquemasEdicion();
+            calcularTotalEdicion();
+
+            if ($('#editarEsquemasContainer .esquema-item').length < 10) {
+                $('#editarBtnAgregarMas').show();
+            }
+        }
+    });
+
+    // Reindexar esquemas en edición
+    function reindexarEsquemasEdicion() {
+        $('#editarEsquemasContainer .esquema-item').each(function(index) {
+            $(this).attr('data-index', index);
+            $(this).find('label strong').text(`Esquema ${index + 1} *`);
+            $(this).find('[name^="esquemas"]').each(function() {
+
+                const name = $(this).attr('name');
+                const newName = name.replace(/esquemas\[\d+\]/, `esquemas[${index}]`);
+                $(this).attr('name', newName);
+            });
+        });
+        editarEsquemaCounter = $('#editarEsquemasContainer .esquema-item').length;
+    }
+
+    // Calcular total en edición
+    function calcularTotalEdicion() {
+        let total = 0;
+        let todosCompletos = true;
+        let hayDatos = false;
+        let hayCambios = false;
+
+        $('#editarEsquemasContainer .editar-esquema-puntos').each(function() {
+            const valor = parseFloat($(this).val()) || 0;
+            total += valor;
+            const $item = $(this).closest('.esquema-item');
+            const nombre = $item.find('.editar-esquema-nombre').val().trim();
+
+            if (nombre || valor > 0) hayDatos = true;
+
+            if (hayDatos && (!nombre || valor <= 0)) {
+                todosCompletos = false;
+                $item.removeClass('valid').addClass('invalid');
+            } else if (hayDatos && nombre && valor > 0) {
+                $item.removeClass('invalid').addClass('valid');
+            } else {
+                $item.removeClass('valid invalid');
+            }
+        });
+
+
+        // Verificar si hay cambios comparando con originales
+        const esquemasActuales = [];
+        $('#editarEsquemasContainer .esquema-item').each(function() {
+            const nombre = $(this).find('.editar-esquema-nombre').val().trim();
+            const puntos = parseFloat($(this).find('.editar-esquema-puntos').val()) || 0;
+            const id = $(this).find('input[type="hidden"]').val();
+            if (nombre && puntos > 0) {
+                esquemasActuales.push({
+                    id,
+                    nombre,
+                    puntos
+                });
+            }
+        });
+
+        // Comparar con originales para detectar cambios
+        if (esquemasActuales.length !== esquemasParcialOriginales.length) {
+            hayCambios = true;
+        } else {
+            for (let i = 0; i < esquemasActuales.length; i++) {
+                const actual = esquemasActuales[i];
+                const original = esquemasParcialOriginales.find(orig => orig.id == actual.id);
+                if (!original || actual.nombre !== original.nombre || Math.abs(actual.puntos - original.puntos) > 0.01) {
+                    hayCambios = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hayDatos) {
+            $('#btn-actualizar-parcial').prop('disabled', true);
+            return;
+        }
+
+        total = Math.round(total * 10) / 10;
+        $('#editarTotalPuntos').text(total.toFixed(1));
+
+        const $totalDisplay = $('#editarTotalDisplay');
+        const $totalEstado = $('#editarTotalEstado');
+        const $btnActualizar = $('#btn-actualizar-parcial');
+
+        // Limpiar clases previas
+        $totalDisplay.removeClass('alert-success alert-warning alert-danger');
+
+        if (total === 10.0 && todosCompletos && hayCambios) {
+            $totalDisplay.addClass('alert-success');
+            $totalEstado.html('<span class="glyphicon glyphicon-ok"></span> ¡Perfecto! Los esquemas suman exactamente 10.0 puntos y hay cambios para guardar');
+            $btnActualizar.prop('disabled', false);
+        } else if (total === 10.0 && todosCompletos && !hayCambios) {
+            $totalDisplay.addClass('alert-warning');
+            $totalEstado.html('<span class="glyphicon glyphicon-warning-sign"></span> No se han realizado cambios');
+            $btnActualizar.prop('disabled', true);
+        } else if (total < 10.0) {
+            $totalDisplay.addClass('alert-warning');
+            $totalEstado.html(`<span class="glyphicon glyphicon-warning-sign"></span> Faltan ${(10.0 - total).toFixed(1)} puntos para completar los 10.0 puntos`);
+            $btnActualizar.prop('disabled', true);
+        } else if (total > 10.0) {
+            $totalDisplay.addClass('alert-danger');
+            $totalEstado.html(`<span class="glyphicon glyphicon-exclamation-sign"></span> Excede por ${(total - 10.0).toFixed(1)} puntos. Debe ser exactamente 10.0 puntos`);
+            $btnActualizar.prop('disabled', true);
+        } else {
+            $totalDisplay.addClass('alert-warning');
+            $totalEstado.html('<span class="glyphicon glyphicon-warning-sign"></span> Complete todos los campos correctamente');
+            $btnActualizar.prop('disabled', true);
+        }
+    }
+
+    // Eventos de cambio en inputs de edición
+    $(document).on('input change', '.editar-esquema-nombre, .editar-esquema-puntos', function() {
+        calcularTotalEdicion();
+    });
+
+    // Limpiar modal al cerrar
+    $('#modalEditarParcial').on('hidden.bs.modal', function() {
+        $(this).find('form')[0].reset();
+        $('#editarEsquemasContainer').empty();
+        $('#editarBtnAgregarMas').hide();
+        $('#btn-actualizar-parcial').prop('disabled', true);
+        editarEsquemaCounter = 0;
+        esquemasParcialOriginales = [];
+    });
+
+    // Envío del formulario de edición
+    $('#formEditarParcial').submit(function(e) {
+        e.preventDefault();
+
+        if ($('#editarEsquemasContainer .esquema-item').length === 0) {
+            mostrarMensaje('Debe tener al menos un esquema', 'error');
+            return;
+        }
+
+        // Ver los datos que se envían
+        const datos = $(this).serialize();
+        console.log('Datos enviados:', datos);
+
+        // Mostrar loading
+        $('#btn-actualizar-parcial').prop('disabled', true).html('<span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Guardando...');
+
+        $.ajax({
+            url: '<?= base_url('sysmater/docente/gestionar_materia/actualizar_parcial_completo') ?>',
+            method: 'POST',
+            data: $(this).serialize(),
+
+            success: function(response) {
+
+                console.log('Respuesta actualización:', response);
+
+                if (response === 'ok') {
+                    mostrarMensaje("Parcial actualizado correctamente.", "success");
+                    $('#modalEditarParcial').modal('hide');
+                    setTimeout(() => location.reload(), 1500);
+                } else if (response === 'puntos_invalidos') {
+                    mostrarMensaje('El total de puntos debe ser exactamente 10.0', 'error');
+                } else if (response === 'actualizado_sin_borrar') {
+                    mostrarMensaje('Parcial actualizado. No se eliminaron componentes porque hay actividades relacionadas.', 'warning');
+                    $('#modalEditarParcial').modal('hide');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    mostrarMensaje('Error al actualizar el parcial: ' + response, 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al actualizar:', status, error);
+                mostrarMensaje('Error de conexión al actualizar.', 'error');
+            },
+            complete: function() {
+                $('#btn-actualizar-parcial').prop('disabled', false).html('<span class="glyphicon glyphicon-floppy-disk"></span> Actualizar Parcial');
+            }
+        });
+    });
 </script>

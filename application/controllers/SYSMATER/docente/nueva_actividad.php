@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class asignar_actividades extends CI_Controller
+class nueva_actividad extends CI_Controller
 {
     public function __construct()
     {
@@ -21,7 +21,7 @@ class asignar_actividades extends CI_Controller
             //$data['componentes'] = $this->actividades_model->obtener_componente();
 
             $this->load->view("templates/views_sysmater/docente_views/docente_navbar_view");
-            $this->load->view("templates/views_sysmater/docente_views/asignar_actividades_view", $data);
+            $this->load->view("templates/views_sysmater/docente_views/nueva_actividad_view", $data);
             $this->load->view("templates/shared/footer_view");
         } else {
             $this->session->set_flashdata(
@@ -62,23 +62,22 @@ class asignar_actividades extends CI_Controller
 
             $vchClvMateria  = $this->input->post('vchClvMateria');
             $parcial  = $this->input->post('parcial');
-            $periodo = $this->determinarPeriodo();
-
+    
             if (!$vchClvMateria) {
                 echo json_encode([]);
                 return;
             }
 
-            $materias = $this->actividades_model->listar_instrumentos($vchClvMateria, $parcial, $periodo);
+            $resultado = $this->actividades_model->listar_instrumentos($vchClvMateria, $parcial);
 
-            echo json_encode($materias);
+            echo json_encode($resultado);
         } else {
             echo json_encode([]);
         }
     }
 
 
-    //** controlador para mostrar instrumento al asaignar activdad */
+    //** controlador para mostrar instrumento al asignar activdad */
     public function obtener_detalles_instrumento()
     {
         $id_instrumento = $this->input->post('id_instrumento');
@@ -117,13 +116,20 @@ class asignar_actividades extends CI_Controller
             $descripcion = $data->descripcion;
             $vchClvMateria = $data->vchClvMateria;
             $id_instrumento = $data->id_instrumento;
-            //$fecha_aplicacion = $data->fecha_aplicacion;
             $fechas_por_grupo = $data->fechas_por_grupo;
             $id_modalidad = $data->id_modalidad;
             $id_valor_componente = $data->id_valor_componente;
             $grupos = $data->grupos;
-            $equipos = $data->equipos; // <- Asegúrate de recibir esto también
+
+            $equiposNuevos = $data->equiposNuevos;
+            $equiposExistentes = $data->equiposExistentes;
             $vchClvTrabajador = $this->session->Matricula;
+
+            if (!empty($equiposNuevos)) {
+                $equipos = $equiposNuevos; 
+            } else {
+                $equipos = $equiposExistentes;
+            }
 
             $totalActividades = $this->actividades_model->contar_actividades($vchPeriodo, $vchClvMateria, $vchClvTrabajador);
 
@@ -146,13 +152,14 @@ class asignar_actividades extends CI_Controller
                 'id_valor_componente' => $id_valor_componente // <- AÑADIDO
             ];
 
+
             // Insertar en BD
             $respuesta = $this->actividades_model->insertar_actividad(
                 $actividadData,
                 $vchClvMateria,
                 $fechas_por_grupo,
                 $grupos,
-                $equipos, // <- AÑADIDO si aplica
+                $equipos,
                 $vchPeriodo
             );
 
@@ -192,11 +199,37 @@ class asignar_actividades extends CI_Controller
 
     public function listar_equipos()
     {
-        $idGrupo = $this->input->post('id_grupo');
 
-        $equipos = $this->actividades_model->obtener_equipos_por_grupo($idGrupo);
+        if ($this->session->id_tipo == 4) {
 
-        echo json_encode($equipos);
+            $vchClvTrabajador = $this->session->Matricula;
+            $idGrupo = $this->input->post('id_grupo');
+            $materia = $this->input->post('materia');
+
+            $equipos = $this->actividades_model->obtener_equipos_por_grupo($idGrupo, $materia, $vchClvTrabajador);
+
+            echo json_encode($equipos);
+        } else {
+            echo json_encode([]);
+        }
+    }
+
+
+    public function  obtener_alumnos_grupo()
+    {
+
+        if ($this->session->id_tipo == 4) {
+
+            $vchClvTrabajador = $this->session->Matricula;
+            $idGrupo = $this->input->post('id_grupo');
+            $materia = $this->input->post('materia');
+
+            $alumnos = $this->actividades_model->obtener_alumnos_grupo($idGrupo, $materia, $vchClvTrabajador);
+
+            echo json_encode($alumnos);
+        } else {
+            echo json_encode([]);
+        }
     }
 
 

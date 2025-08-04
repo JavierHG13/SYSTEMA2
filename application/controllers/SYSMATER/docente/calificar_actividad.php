@@ -126,7 +126,7 @@ class calificar_actividad extends CI_Controller
             $data['criterios'] = $this->actividades_model->obtener_criterios_por_actividad_equipo($id_actividad_equipo);
             $data['id_actividad_equipo'] = $id_actividad_equipo;
             $data['actividad'] = $this->actividades_model->obtener_detalles_actividad_equipo($id_actividad_equipo);
-            $data['detalles_equipo'] = $this->actividades_model->obtenerEquipoPorActividadEquipo($id_actividad_equipo, $periodo);
+            $data['detalles_equipo'] = $this->actividades_model->obtenerEquipoPorActividadEquipo($id_actividad_equipo);
             $data['equipo'] = $this->actividades_model->obtener_integrantes_con_calificacion($id_actividad_equipo, $periodo);
 
 

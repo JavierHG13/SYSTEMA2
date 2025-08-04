@@ -331,10 +331,11 @@
         </div>
 
         <div class="btn-container">
-            <button type="button" class="btn-generar" id="btnGenerar" onclick="exportarReporte()">
-                <i class="fas fa-download"></i>
+            <button type="button" class="btn btn-success" id="btnGenerar" onclick="exportarReporte()">
+                <span class="glyphicon glyphicon-ok"></span>
                 Generar Reporte
             </button>
+
         </div>
     </form>
 </div>
@@ -362,7 +363,7 @@
             const cuatrimestre = this.value;
 
             if (cuatrimestre) {
-                $.post(base_url + "sysmater/docente/asignar_actividades/cargar_materias_del_docente", {
+                $.post(base_url + "sysmater/docente/nueva_actividad/cargar_materias_del_docente", {
                     vchCuatrimestre: cuatrimestre
                 }, function(data) {
                     const materias = $('#materia');
@@ -382,7 +383,7 @@
             const materia = this.value;
 
             if (materia) {
-                $.post(base_url + "sysmater/docente/asignar_actividades/listar_grupos", {
+                $.post(base_url + "sysmater/docente/nueva_actividad/listar_grupos", {
                     vchClvMateria: materia
                 }, function(data) {
                     const grupos = $('#grupo');

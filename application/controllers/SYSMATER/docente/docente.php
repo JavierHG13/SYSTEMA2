@@ -218,7 +218,7 @@
 
 	public function programar_actividad()
 	{
-		redirect('./sysmater/docente/asignar_actividades');
+		redirect('./sysmater/docente/nueva_actividad');
 	}
 
 	public function gestionar_materia()

@@ -66,8 +66,6 @@
                     <th style="width: 500px;">Nombre Completo</th>
                     <th class="text-center">Calificación</th>
                     <th class="text-center">Estado</th>
-
-                    <th class="text-center">Estado</th>
                     <th class="text-center">Acciones</th>
                 </tr>
             </thead>

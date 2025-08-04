@@ -198,24 +198,6 @@ class Materia_model extends CI_Model
 	}
 
 
-	public function eliminar_componente($id_valor_componente)
-	{
-		// Verificar si el componente está en uso
-		$this->db->where('id_valor_componente', $id_valor_componente);
-		$query = $this->db->get('tbl_actividades');
-
-		// Si hay resultados, significa que el componente está en uso
-		if ($query->num_rows() > 0) {
-			return false; // No se puede eliminar porque está siendo usado
-		}
-
-		// Si no está en uso, proceder a eliminar
-		return $this->db
-			->where('id_valor_componente', $id_valor_componente)
-			->delete('tbl_valor_componentes_evaluacion');
-	}
-
-
 	public function datos_materia($vchClvMateria)
 	{
 		$query = $this->db->query("EXEC sp_DatosMateria ?", [$vchClvMateria]);
@@ -292,7 +274,7 @@ class Materia_model extends CI_Model
 	}
 
 	// Función para obtener componentes de un parcial específico
-	public function obtener_componentes_parcial($vchClvMateria, $idPeriodo, $parcial, $vchClvTrabajador)
+	/*public function obtener_componentes_parcial($vchClvMateria, $idPeriodo, $parcial, $vchClvTrabajador)
 	{
 		$this->db->where('vchClvMateria', $vchClvMateria);
 		$this->db->where('idPeriodo', $idPeriodo);
@@ -302,5 +284,61 @@ class Materia_model extends CI_Model
 
 		$query = $this->db->get('tbl_valor_componentes_evaluacion');
 		return $query->result();
+	}*/
+
+	public function obtener_componentes_parcial($vchClvMateria, $vchPeriodo, $parcial, $vchClvTrabajador)
+	{
+		$this->db->select('id_valor_componente, vchClvMateria, idPeriodo, parcial, vchClvTrabajador, vchPeriodo, componente, valor_componente');
+		$this->db->from('tbl_valor_componentes_evaluacion');
+		$this->db->where('vchClvMateria', $vchClvMateria);
+		$this->db->where('vchPeriodo', $vchPeriodo);
+		$this->db->where('parcial', $parcial);
+		$this->db->where('vchClvTrabajador', $vchClvTrabajador);
+
+		$query = $this->db->get();
+
+		return $query->result();
+	}
+
+
+	// Obtener todos los IDs actuales
+	public function obtener_ids_componentes($vchClvMateria, $vchPeriodo, $parcial, $vchClvTrabajador)
+	{
+		$this->db->select('id_valor_componente');
+		$this->db->from('tbl_valor_componentes_evaluacion');
+		$this->db->where([
+			'vchClvMateria' => $vchClvMateria,
+			'vchPeriodo'    => $vchPeriodo,
+			'parcial'       => $parcial,
+			'vchClvTrabajador' => $vchClvTrabajador
+		]);
+		$query = $this->db->get();
+		return array_column($query->result_array(), 'id_valor_componente');
+	}
+
+	// Verificar si un componente está en uso
+	public function componente_en_uso($id_valor_componente)
+	{
+		return $this->db->where('id_valor_componente', $id_valor_componente)
+			->count_all_results('tbl_actividades') > 0;
+	}
+
+	// Eliminar componente por ID
+	public function eliminar_componente($id_valor_componente)
+	{
+		return $this->db->where('id_valor_componente', $id_valor_componente)
+			->delete('tbl_valor_componentes_evaluacion');
+	}
+
+	// Actualizar múltiples componentes
+	public function actualizar_componentes_parcial($componentes_actualizar)
+	{
+		return $this->db->update_batch('tbl_valor_componentes_evaluacion', $componentes_actualizar, 'id_valor_componente');
+	}
+
+	// Insertar múltiples componentes
+	public function insertar_componentes_parcial($componentes_nuevos)
+	{
+		return $this->db->insert_batch('tbl_valor_componentes_evaluacion', $componentes_nuevos);
 	}
 }

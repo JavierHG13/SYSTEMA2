@@ -77,7 +77,7 @@
                                 <div class="panel-body text-center">
                                     <?php if ($tiene_calificacion): ?>
                                         <h1 class="<?= $clase_calificacion ?>">
-                                            <strong><?= $calificacion_total['calificacion_total'] ?>/<?= $actividad['valor_total'] ?></strong>
+                                            <strong><?= number_format($calificacion_total['calificacion_total'],2) ?>/<?= $actividad['valor_total'] ?></strong>
                                         </h1>
                                         <p class="<?= $clase_calificacion ?>">
                                             <strong><?= $porcentaje_total ?>%</strong>
@@ -121,7 +121,7 @@
                                                 <tr class="<?= $criterio['clase_fila'] ?>">
                                                     <td><strong><?= htmlspecialchars($criterio['nombre']) ?></strong></td>
                                                     <td class="text-center"><?= $criterio['valor_maximo'] ?></td>
-                                                    <td class="text-center"><strong><?= $criterio['calificacion'] ?></strong></td>
+                                                    <td class="text-center"><strong><?= number_format($criterio['calificacion'],2) ?></strong></td>
                                                     <td class="text-center"><?= $criterio['porcentaje'] ?>%</td>
                                                 </tr>
                                             <?php endforeach; ?>

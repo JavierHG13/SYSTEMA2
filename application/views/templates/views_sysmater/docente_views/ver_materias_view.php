@@ -210,10 +210,6 @@
                                                class="btn btn-success sys-btn-success">
                                                 <span class="glyphicon glyphicon-list-alt"></span> Actividades
                                             </a>
-                                            <a href="<?= site_url('sysmater/docente/docente/gestionar_equipos/') ?>${grupo.idGrupo}/${materiaId}" 
-                                               class="btn btn-primary">
-                                                <span class="glyphicon glyphicon-user"></span> Equipos
-                                            </a>
                                     </td>
                                 </tr>
                             `;
