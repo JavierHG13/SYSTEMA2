@@ -58,6 +58,34 @@ class ver_instrumentos extends CI_Controller
         } // end if-else
     } // end function
 
+    public function eliminar_instrumento()
+    {
+        if ($this->session->id_tipo == 4) {
+            
+            $id = $this->input->post('id_instrumento');
+
+            if (!$id) {
+                echo json_encode(['exito' => 0, 'mensaje' => 'ID no proporcionado.']);
+                return;
+            }
+
+            $this->load->model('Instrumento_model');
+            $resultado = $this->Instrumento_model->eliminarInstrumento($id);
+
+            echo json_encode($resultado);
+        } else {
+            $this->session->set_flashdata(
+                'msg',
+                '<div class="alert alert-danger text-center"6> 
+				!Sesión no iniciada!
+				Verifique que el usuario y contraseña sean correctos
+			</div>'
+            );
+            redirect("login");
+        }
+    }
+
+
 
 
     public function detalles_instrumento()
@@ -83,6 +111,8 @@ class ver_instrumentos extends CI_Controller
             redirect("login");
         } // end if-else
     } // end function
+
+
 
     //Actualizar instrumento
     public function actualizar()

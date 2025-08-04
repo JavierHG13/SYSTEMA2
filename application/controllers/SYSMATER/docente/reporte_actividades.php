@@ -546,105 +546,34 @@ class reporte_actividades extends CI_Controller
             return;
         }
 
-        // Cargar librería TCPDF
         require_once(APPPATH . 'third_party/tcpdf/tcpdf.php');
-
-        // Obtener datos del primer alumno
         $primerAlumno = $datos_calificaciones[0];
 
-        // Crear instancia de TCPDF en orientación horizontal
-        $pdf = new TCPDF('L', PDF_UNIT, 'LETTER', true, 'UTF-8', false);
-
-        // Configuración del documento
-        $pdf->SetCreator('Sistema SYSMATER');
-        $pdf->SetAuthor('Universidad Tecnológica de la Huasteca Hidalguense');
-        $pdf->SetTitle('Reporte de Calificaciones');
-        $pdf->SetSubject('Reporte Académico');
-
-        // Configurar márgenes
-        $pdf->SetMargins(10, 15, 10);
-        $pdf->SetHeaderMargin(5);
-        $pdf->SetFooterMargin(5);
-
-        // Desactivar header y footer automáticos
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-
-        // Agregar página
-        $pdf->AddPage();
-
-        // Insertar logo
-        $pageWidth = $pdf->getPageWidth();
-        $imageWidth = 150;
-        $imageHeight = 18;
-        $x = ($pageWidth - $imageWidth) / 2;
-        $pdf->Image(base_url() . '/assets/img/logo_uthh_c.jpg', $x, 5, $imageWidth, $imageHeight, '', '', '', false, 300, '', false, false, 0, 'CM', false, false);
-
-        $pdf->Ln(10);
-
-        // Crear tabla de información
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->SetFillColor(217, 217, 217); // Gris claro
-
-        // Configurar dimensiones de la tabla de información
-        $label_width = 25;
-        $content_width = 235; // Ancho total menos el label
-
-        // Fila 1: Materia
-        $pdf->Cell($label_width, 7, 'Materia:', 1, 0, 'L', true);
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->Cell($content_width, 7, strtoupper($primerAlumno['Nombre_materia']), 1, 1, 'L');
-
-        // Fila 2: Docente
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->Cell($label_width, 7, 'Docente:', 1, 0, 'L', true);
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->Cell($content_width, 7, strtoupper($primerAlumno['Docente']), 1, 1, 'L');
-
-        // Fila 3: Período
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->Cell($label_width, 7, 'Período:', 1, 0, 'L', true);
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->Cell($content_width, 7, $primerAlumno['Periodo'], 1, 1, 'L');
-
-        // Fila 4: Evaluación
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->Cell($label_width, 7, 'Evaluación:', 1, 0, 'L', true);
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->Cell($content_width, 7, 'PARCIAL ' . $primerAlumno['Parcial'], 1, 1, 'L');
-
-        // Fila 5: Grado y Grupo
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->Cell($label_width, 7, 'Grado y Grupo:', 1, 0, 'L', true);
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->Cell($content_width, 7, $primerAlumno['Cuatrimestre'] . ' "' . $primerAlumno['Grupo'] . '"', 1, 1, 'L');
-
-        $pdf->Ln(5);
-
-        // Analizar actividades para crear la estructura de la tabla
+        // Analizar estructura de actividades REAL de los datos
         $actividades = [];
-        $columnas_por_actividad = [];
-
-        // Obtener todas las actividades únicas y sus estructuras
         foreach ($datos_calificaciones as $alumno) {
             foreach ($alumno['actividades'] as $nombre_actividad => $datos_actividad) {
                 if (!isset($actividades[$nombre_actividad])) {
-                    $actividades[$nombre_actividad] = [];
+                    $actividades[$nombre_actividad] = [
+                        'practicas' => [],
+                        'porcentaje' => null
+                    ];
 
-                    // Contar prácticas
-                    $actividades[$nombre_actividad]['practicas'] = [];
+                    // Buscar todas las claves que no sean Cal_, Prom_, CalPond_
                     foreach ($datos_actividad as $key => $value) {
-                        if (strpos($key, ' - Practica') !== false || strpos($key, ' - ') !== false) {
+                        if (
+                            strpos($key, 'Cal_') !== 0 &&
+                            strpos($key, 'Prom_') !== 0 &&
+                            strpos($key, 'CalPond_') !== 0
+                        ) {
                             $actividades[$nombre_actividad]['practicas'][] = $key;
                         }
                     }
 
-                    // Determinar si tiene calificación ponderada y extraer porcentaje
+                    // Buscar porcentaje
                     foreach ($datos_actividad as $key => $value) {
-                        if (strpos($key, 'CalPond_') === 0) {
-                            if (preg_match('/\((\d+\.\d+)%\)/', $key, $matches)) {
-                                $actividades[$nombre_actividad]['porcentaje'] = $matches[1];
-                            }
+                        if (strpos($key, 'CalPond_') === 0 && preg_match('/\((\d+(?:\.\d+)?)%\)/', $key, $matches)) {
+                            $actividades[$nombre_actividad]['porcentaje'] = $matches[1];
                             break;
                         }
                     }
@@ -652,163 +581,275 @@ class reporte_actividades extends CI_Controller
             }
         }
 
-        // Calcular anchos de columnas dinámicamente
-        $ancho_matricula = 20;
-        $ancho_nombre = 45;
-        $ancho_total_disponible = 260 - $ancho_matricula - $ancho_nombre - 20; // 20 para resultados
-        $num_actividades = count($actividades);
-
-        // Calcular columnas totales necesarias para actividades
-        $total_columnas_actividades = 0;
-        foreach ($actividades as $info_actividad) {
-            $num_practicas = count($info_actividad['practicas']);
-            if ($num_practicas > 0) {
-                $total_columnas_actividades += $num_practicas + 2; // prácticas + promedio + valor pts
-            } else {
-                $total_columnas_actividades += 2; // cal + valor pts
-            }
+        // Determinar orientación
+        $total_columnas = 0;
+        foreach ($actividades as $info) {
+            $num_practicas = count($info['practicas']);
+            $total_columnas += max(1, $num_practicas) + 2; // prácticas + promedio + valor
         }
 
-        $ancho_columna_actividad = $total_columnas_actividades > 0 ? $ancho_total_disponible / $total_columnas_actividades : 10;
-        if ($ancho_columna_actividad < 8) $ancho_columna_actividad = 8;
+        $horizontal = ($total_columnas > 6);
 
-        // Crear encabezados de la tabla principal
-        $pdf->SetFont('helvetica', 'B', 7);
-        $pdf->SetFillColor(39, 129, 4); // Verde
-        $pdf->SetTextColor(255, 255, 255); // Texto blanco
+        // Crear PDF tamaño carta
+        $pdf = new TCPDF($horizontal ? 'L' : 'P', 'mm', 'LETTER', true, 'UTF-8', false);
+        $pdf->SetCreator('Sistema SYSMATER');
+        $pdf->SetTitle('Reporte de Calificaciones');
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
 
-        // Primera fila de encabezados (nombres de actividades)
-        $y_pos = $pdf->GetY();
+        // Paginación - MÁS estudiantes por página
+        $estudiantes_por_pagina = $horizontal ? 40 : 35;
+        $paginas = array_chunk($datos_calificaciones, $estudiantes_por_pagina);
 
-        // Matrícula y Nombre (se extienden 2 filas)
-        $pdf->Cell($ancho_matricula, 14, 'MATRÍCULA', 1, 0, 'C', true);
-        $pdf->Cell($ancho_nombre, 14, 'NOMBRE DEL ALUMNO', 1, 0, 'C', true);
+        foreach ($paginas as $num_pagina => $estudiantes_pagina) {
+            $pdf->AddPage();
 
-        // Encabezados de actividades
-        foreach ($actividades as $nombre_actividad => $info_actividad) {
-            $num_practicas = count($info_actividad['practicas']);
-            $columnas_actividad = ($num_practicas > 0) ? $num_practicas + 2 : 2;
-            $ancho_total_actividad = $ancho_columna_actividad * $columnas_actividad;
+            $ancho_pagina = $pdf->getPageWidth() - 20;
+            $margen_izquierdo = 10; // Definir margen izquierdo constante
 
-            $pdf->Cell($ancho_total_actividad, 7, strtoupper($nombre_actividad), 1, 0, 'C', true);
-        }
+            // LOGO - Corregir proporción y posición
+            $logo_w = $horizontal ? 120 : 100;
+            $logo_h = $horizontal ? 25 : 20;
+            $logo_x = ($pdf->getPageWidth() - $logo_w) / 2;
+            $pdf->Image(base_url() . '/assets/img/logo_uthh_c.jpg', $logo_x, 8, $logo_w, $logo_h);
+            $pdf->SetY($pdf->GetY() + $logo_h + 5);
 
-        // Resultados
-        $pdf->Cell(20, 7, 'Resultados', 1, 1, 'C', true);
+            if ($num_pagina == 0) {
+                // Tabla información completa - POSICIÓN FIJA Y ANCHO COMPLETO
+                $y_actual = $pdf->GetY();
+                $pdf->SetXY($margen_izquierdo, $y_actual);
 
-        // Segunda fila de encabezados (sub-columnas)
-        $pdf->SetX(10 + $ancho_matricula + $ancho_nombre); // Posicionarse después de matrícula y nombre
+                $pdf->SetFont('helvetica', 'B', 9);
+                $pdf->SetFillColor(217, 217, 217);
 
-        foreach ($actividades as $nombre_actividad => $info_actividad) {
-            $num_practicas = count($info_actividad['practicas']);
+                $info_filas = [
+                    ['Materia:', strtoupper($primerAlumno['Nombre_materia'])],
+                    ['Docente:', strtoupper($primerAlumno['Docente'])],
+                    ['Período:', $primerAlumno['Periodo']],
+                    ['Evaluación:', 'PARCIAL ' . $primerAlumno['Parcial']],
+                    ['Grado y Grupo:', $primerAlumno['Cuatrimestre'] . ' "' . $primerAlumno['Grupo'] . '"']
+                ];
 
-            if ($num_practicas > 0) {
-                // Números de prácticas
-                for ($i = 1; $i <= $num_practicas; $i++) {
-                    $pdf->Cell($ancho_columna_actividad, 7, $i, 1, 0, 'C', true);
+                foreach ($info_filas as $fila) {
+                    $pdf->SetX($margen_izquierdo); // Posición X fija
+                    $pdf->Cell(30, 6, $fila[0], 1, 0, 'L', true);
+                    $pdf->SetFont('helvetica', '', 9);
+                    $pdf->Cell($ancho_pagina - 30, 6, $fila[1], 1, 1, 'L');
+                    $pdf->SetFont('helvetica', 'B', 9);
                 }
-                // Promedio
-                $pdf->Cell($ancho_columna_actividad, 7, 'Promedio', 1, 0, 'C', true);
-            } else {
-                // Solo Cal
-                $pdf->Cell($ancho_columna_actividad, 7, 'Cal', 1, 0, 'C', true);
+                $pdf->Ln(5);
             }
 
-            // Valor pts
-            $valor_text = 'Valor ';
-            if (isset($info_actividad['porcentaje'])) {
-                $valor_text .= $info_actividad['porcentaje'] . ' pts';
-            } else {
-                $valor_text .= 'pts';
-            }
-            $pdf->Cell($ancho_columna_actividad, 7, $valor_text, 1, 0, 'C', true);
-        }
+            // CÁLCULO DINÁMICO DE ANCHOS - APROVECHA TODO EL ESPACIO
+            $ancho_matricula = 25; // Más ancho para matrícula
+            $ancho_nombre = $horizontal ? 70 : 75; // Más espacio para nombres
+            $ancho_resultados = 35; // Más espacio para resultados
+            $ancho_actividades = $ancho_pagina - $ancho_matricula - $ancho_nombre - $ancho_resultados;
 
-        // Sub-encabezados de Resultados
-        $pdf->Cell(10, 7, 'Decimal', 1, 0, 'C', true);
-        $pdf->Cell(10, 7, 'Redondeo', 1, 1, 'C', true);
+            // Contar TOTAL de columnas de actividades
+            $total_columnas_actividades = 0;
+            $num_actividades = count($actividades);
 
-        // Datos de los estudiantes
-        $pdf->SetTextColor(0, 0, 0); // Texto negro
-        $pdf->SetFont('helvetica', '', 7);
-
-        $fila_par = true;
-        foreach ($datos_calificaciones as $alumno) {
-            // Alternar colores de fila
-            if ($fila_par) {
-                $pdf->SetFillColor(232, 245, 232); // Verde muy claro
-            } else {
-                $pdf->SetFillColor(255, 255, 255); // Blanco
-            }
-
-            // Matrícula
-            $pdf->Cell($ancho_matricula, 8, $alumno['Matricula'], 1, 0, 'C', true);
-
-            // Nombre (alineado a la izquierda)
-            $pdf->Cell($ancho_nombre, 8, strtoupper($alumno['Nombre_Alumno']), 1, 0, 'L', true);
-
-
-            // Datos de actividades
-            foreach ($actividades as $nombre_actividad => $info_actividad) {
-                $datos_actividad = isset($alumno['actividades'][$nombre_actividad]) ? $alumno['actividades'][$nombre_actividad] : [];
-                $num_practicas = count($info_actividad['practicas']);
-
-                if ($num_practicas > 0) {
-                    // Mostrar prácticas
-                    foreach ($info_actividad['practicas'] as $nombre_practica) {
-
-                        $valor = isset($datos_actividad[$nombre_practica]) && $datos_actividad[$nombre_practica] !== ''
-                            ? $datos_actividad[$nombre_practica]
-                            : 0;
-
-                        //$pdf->Cell($ancho_columna_actividad, 8, $valor, 1, 0, 'C', true);
-                        $pdf->Cell($ancho_columna_actividad, 8, intval($valor), 1, 0, 'C', true);
-                    }
-
-                    // Promedio (Cal_)
-                    $cal_key = 'Prom_' . $nombre_actividad;
-                    $calificacion = isset($datos_actividad[$cal_key]) ? $datos_actividad[$cal_key] : 0;
-                    $pdf->Cell($ancho_columna_actividad, 8, $calificacion, 1, 0, 'C', true);
+            foreach ($actividades as $info) {
+                $num_practicas = count($info['practicas']);
+                if ($num_practicas > 1) {
+                    $total_columnas_actividades += $num_practicas + 2; // prácticas + promedio + valor
                 } else {
-                    // Solo Cal
-                    $cal_key = 'Cal_' . $nombre_actividad;
-                    $calificacion = isset($datos_actividad[$cal_key]) ? $datos_actividad[$cal_key] : 0;
-                    $pdf->Cell($ancho_columna_actividad, 8, $calificacion, 1, 0, 'C', true);
+                    $total_columnas_actividades += 3; // cal + promedio + valor
                 }
-
-                // Valor ponderado (CalPond_)
-                $valor_ponderado = 0;
-                foreach ($datos_actividad as $key => $value) {
-                    if (strpos($key, 'CalPond_') === 0) {
-                        $valor_ponderado = $value;
-                        break;
-                    }
-                }
-                $pdf->Cell($ancho_columna_actividad, 8, number_format($valor_ponderado, 1), 1, 0, 'C', true);
             }
 
-            // Resultados
-            $calificacion_final = $alumno['Calificacion Final'];
-            $pdf->Cell(10, 8, number_format($calificacion_final, 1), 1, 0, 'C', true);
-            $pdf->Cell(10, 8, round($calificacion_final), 1, 1, 'C', true);
+            // DISTRIBUCIÓN PROPORCIONAL del espacio disponible
+            $ancho_por_columna = $ancho_actividades / $total_columnas_actividades;
 
-            $fila_par = !$fila_par;
+            // Anchos mínimos y máximos para mantener legibilidad
+            $ancho_min_numero = 8;
+            $ancho_max_numero = 15;
+            $ancho_min_cal = 12;
+            $ancho_max_cal = 25;
+            $ancho_min_promedio = 15;
+            $ancho_max_promedio = 30;
+            $ancho_min_valor = 20;
+            $ancho_max_valor = 40;
+
+            // Aplicar límites
+            $ancho_numero = max($ancho_min_numero, min($ancho_max_numero, $ancho_por_columna));
+            $ancho_cal = max($ancho_min_cal, min($ancho_max_cal, $ancho_por_columna));
+            $ancho_promedio = max($ancho_min_promedio, min($ancho_max_promedio, $ancho_por_columna * 1.2));
+            $ancho_valor = max($ancho_min_valor, min($ancho_max_valor, $ancho_por_columna * 1.3));
+
+            // Si hay pocas actividades, redistribuir el espacio extra
+            if ($num_actividades <= 3) {
+                $factor_expansion = 1.5;
+                $ancho_numero *= $factor_expansion;
+                $ancho_cal *= $factor_expansion;
+                $ancho_promedio *= $factor_expansion;
+                $ancho_valor *= $factor_expansion;
+
+                // Recalcular para que no se salga del espacio
+                $espacio_total_usado = 0;
+                foreach ($actividades as $info) {
+                    $num_practicas = count($info['practicas']);
+                    if ($num_practicas > 1) {
+                        $espacio_total_usado += ($num_practicas * $ancho_numero) + $ancho_promedio + $ancho_valor;
+                    } else {
+                        $espacio_total_usado += $ancho_cal + $ancho_promedio + $ancho_valor;
+                    }
+                }
+
+                if ($espacio_total_usado > $ancho_actividades) {
+                    $factor_ajuste = $ancho_actividades / $espacio_total_usado;
+                    $ancho_numero *= $factor_ajuste;
+                    $ancho_cal *= $factor_ajuste;
+                    $ancho_promedio *= $factor_ajuste;
+                    $ancho_valor *= $factor_ajuste;
+                }
+            }
+
+            // ENCABEZADOS - TAMAÑO DE FUENTE DINÁMICO
+            $y_tabla = $pdf->GetY();
+            $pdf->SetXY($margen_izquierdo, $y_tabla);
+
+            // Fuente más grande si hay pocas actividades
+            $font_size = ($num_actividades <= 3) ? 8 : 7;
+            $pdf->SetFont('helvetica', 'B', $font_size);
+            $pdf->SetFillColor(39, 129, 4);
+            $pdf->SetTextColor(255, 255, 255);
+
+            // Altura de celdas dinámicas
+            $altura_encabezado = ($num_actividades <= 3) ? 12 : 10;
+            $altura_subencabezado = ($num_actividades <= 3) ? 6 : 5;
+
+            // Primera fila encabezados
+            $pdf->Cell($ancho_matricula, $altura_encabezado, 'MATRÍCULA', 1, 0, 'C', true);
+            $pdf->Cell($ancho_nombre, $altura_encabezado, 'NOMBRE DEL ALUMNO', 1, 0, 'C', true);
+
+            // Calcular posición X para actividades
+            $x_actividades = $margen_izquierdo + $ancho_matricula + $ancho_nombre;
+            $x_actual = $x_actividades;
+
+            foreach ($actividades as $nombre => $info) {
+                $num_practicas = count($info['practicas']);
+
+                $ancho_total_actividad = 0;
+                if ($num_practicas > 1) {
+                    $ancho_total_actividad = ($num_practicas * $ancho_numero) + $ancho_promedio + $ancho_valor;
+                } else {
+                    $ancho_total_actividad = $ancho_cal + $ancho_promedio + $ancho_valor;
+                }
+
+                $pdf->Cell($ancho_total_actividad, $altura_subencabezado, strtoupper($nombre), 1, 0, 'C', true);
+                $x_actual += $ancho_total_actividad;
+            }
+            $pdf->Cell($ancho_resultados, $altura_subencabezado, 'Resultados', 1, 1, 'C', true);
+
+            // Segunda fila encabezados - POSICIÓN EXACTA
+            $pdf->SetXY($x_actividades, $y_tabla + $altura_subencabezado); // Posición exacta después de matrícula y nombre
+
+            foreach ($actividades as $nombre => $info) {
+                $num_practicas = count($info['practicas']);
+
+                if ($num_practicas > 1) {
+                    // Múltiples prácticas - numerar con ancho compacto
+                    for ($i = 1; $i <= $num_practicas; $i++) {
+                        $pdf->Cell($ancho_numero, 5, $i, 1, 0, 'C', true);
+                    }
+                    $pdf->Cell($ancho_promedio, 5, 'Promedio', 1, 0, 'C', true);
+                } else {
+                    // Una sola calificación
+                    $pdf->Cell($ancho_cal, 5, 'Cal', 1, 0, 'C', true);
+                    $pdf->Cell($ancho_promedio, 5, 'Promedio', 1, 0, 'C', true);
+                }
+
+                $valor_texto = 'Valor ';
+                if ($info['porcentaje']) {
+                    $valor_texto .= $info['porcentaje'] . ' pts';
+                } else {
+                    $valor_texto .= 'pts';
+                }
+                $pdf->Cell($ancho_valor, 5, $valor_texto, 1, 0, 'C', true);
+            }
+
+            $pdf->Cell($ancho_resultados / 2, 5, 'Decimal', 1, 0, 'C', true);
+            $pdf->Cell($ancho_resultados / 2, 5, 'Redondeo', 1, 1, 'C', true);
+
+            // FILAS ESTUDIANTES - ASEGURAR ALINEACIÓN
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('helvetica', '', 6);
+
+            $par = true;
+            foreach ($estudiantes_pagina as $alumno) {
+                $pdf->SetFillColor($par ? 232 : 255, $par ? 245 : 255, $par ? 232 : 255);
+
+                // FIJAR POSICIÓN X AL INICIO DE CADA FILA
+                $pdf->SetX($margen_izquierdo);
+
+                $pdf->Cell($ancho_matricula, 5, $alumno['Matricula'], 1, 0, 'C', true);
+                $nombre_truncado = strlen($alumno['Nombre_Alumno']) > 32 ?
+                    substr($alumno['Nombre_Alumno'], 0, 29) . '...' : $alumno['Nombre_Alumno'];
+                $pdf->Cell($ancho_nombre, 5, strtoupper($nombre_truncado), 1, 0, 'L', true);
+
+                foreach ($actividades as $nombre => $info) {
+                    $datos = isset($alumno['actividades'][$nombre]) ? $alumno['actividades'][$nombre] : [];
+                    $num_practicas = count($info['practicas']);
+
+                    if ($num_practicas > 1) {
+                        // Mostrar cada práctica con ancho compacto
+                        foreach ($info['practicas'] as $practica) {
+                            $valor = isset($datos[$practica]) && $datos[$practica] !== '' ?
+                                intval($datos[$practica]) : 0;
+                            $pdf->Cell($ancho_numero, 5, $valor, 1, 0, 'C', true);
+                        }
+
+                        // Promedio
+                        $prom_key = 'Prom_' . $nombre;
+                        $promedio = isset($datos[$prom_key]) ? $datos[$prom_key] : 0;
+                        $pdf->Cell($ancho_promedio, 5, $promedio, 1, 0, 'C', true);
+                    } else {
+                        // Una calificación
+                        $cal_key = 'Cal_' . $nombre;
+                        $valor = isset($datos[$cal_key]) ? $datos[$cal_key] : 0;
+                        $pdf->Cell($ancho_cal, 5, $valor, 1, 0, 'C', true);
+                        $pdf->Cell($ancho_promedio, 5, $valor, 1, 0, 'C', true);
+                    }
+
+                    // Valor ponderado
+                    $ponderado = 0;
+                    foreach ($datos as $key => $val) {
+                        if (strpos($key, 'CalPond_') === 0) {
+                            $ponderado = $val;
+                            break;
+                        }
+                    }
+                    $pdf->Cell($ancho_valor, 5, number_format($ponderado, 1), 1, 0, 'C', true);
+                }
+
+                // Resultados
+                $final = $alumno['Calificacion Final'];
+                $pdf->Cell($ancho_resultados / 2, 5, number_format($final, 1), 1, 0, 'C', true);
+                $pdf->Cell($ancho_resultados / 2, 5, round($final), 1, 1, 'C', true);
+
+                $par = !$par;
+            }
+
+            // Firma en última página
+            if ($num_pagina == count($paginas) - 1) {
+                $pdf->Ln(10);
+                $pdf->SetFont('helvetica', 'B', 10);
+                $pdf->SetTextColor(0, 0, 0);
+                $pdf->Cell(0, 8, 'Nombre y firma del Jefe de Grupo', 0, 1, 'C');
+                $pdf->Ln(5);
+                $pdf->Cell(0, 8, '________________________________________________', 0, 1, 'C');
+            }
         }
 
-        // Línea para firma
-        $pdf->Ln(10);
-        $pdf->SetFont('helvetica', 'B', 10);
-        $pdf->Cell(0, 8, 'Nombre y firma del Jefe de Grupo', 0, 1, 'C');
-        $pdf->Ln(5);
-        $pdf->Cell(0, 8, '________________________________________________', 0, 1, 'C');
-
-        // Generar nombre del archivo
         $filename = 'Reporte_' . $primerAlumno['Clave_Materia'] . '_' .
             $primerAlumno['Grupo'] . '_P' . $primerAlumno['Parcial'] . '_' .
             date('Y-m-d_H-i-s') . '.pdf';
 
-        // Salida del PDF
-        $pdf->Output($filename, 'D'); // 'D' para descarga directa
+        $pdf->Output($filename, 'D');
         exit();
     }
 }

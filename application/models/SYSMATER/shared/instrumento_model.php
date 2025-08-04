@@ -204,4 +204,21 @@ class instrumento_model extends CI_Model
         }
         return false; // No hay duplicados
     }
+
+
+    public function eliminarInstrumento($idInstrumento)
+    {
+        $query = $this->db->query("EXEC sp_eliminarInstrumento @id_instrumento = ?", array($idInstrumento));
+
+       
+        if ($query && $query->num_rows() > 0) {
+            $resultado = $query->row();
+            return [
+                'exito' => (int)$resultado->exito,
+                'mensaje' => $resultado->mensaje
+            ];
+        }
+
+        return ['exito' => 1, 'mensaje' => 'Instrumento eliminado correctamente.'];
+    }
 }
